@@ -137,12 +137,12 @@ function GasLogForm() {
 
         // Check filled to full
         if (!filledToFull) {
-            errors.filledToFull = "Please indicate if you filled the car to full";
+            errors.filledToFull = "Please indicate if you filled the car up to full";
         }
 
         // Check filled last time
         if (!filledLastTime) {
-            errors.filledLastTime = "Please indicate if you filled the form last time";
+            errors.filledLastTime = "Please indicate if you filled out the form last time you got gas";
         }
 
         setValidationErrors(errors);
