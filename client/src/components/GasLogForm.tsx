@@ -153,8 +153,7 @@ function GasLogForm() {
                     </button>
                 </div>
 
-                <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 dark:text-white transition-colors duration-300">Fuel
-                    & Odometer Log</h2>
+                <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 dark:text-white transition-colors duration-300">Gas and Mileage Tracking</h2>
 
                 {/* Receipt Photo Input - Estilizado */}
                 <div className="mb-7">
@@ -165,7 +164,7 @@ function GasLogForm() {
                     <div className="relative">
                         <label htmlFor="receiptPhoto"
                                className="flex items-center justify-center w-full py-3 px-4 bg-blue-50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 font-medium rounded-lg border-2 border-blue-200 dark:border-gray-700 cursor-pointer transition-colors duration-300">
-                            <span className="mr-2">📸</span> Tomar/Seleccionar foto
+                            <span className="mr-2">📸</span> Take/Upload a photo
                         </label>
                         <input
                             type="file"
@@ -196,7 +195,7 @@ function GasLogForm() {
               `}
                             onClick={() => handleSquareSelect('separate_photo', setOdometerInputMethod)}
                         >
-                            <span className="text-2xl mb-1">🚗</span> I'll Take a Photo
+                            <span className="text-2xl mb-1">🚗</span> I'll Take A Photo
                         </div>
                         <div
                             className={`flex-1 min-w-[100px] h-24 border-2 rounded-lg flex flex-col items-center justify-center text-center text-sm font-bold cursor-pointer transition-all duration-300 transform hover:scale-105 p-2
@@ -204,7 +203,7 @@ function GasLogForm() {
                `}
                             onClick={() => handleSquareSelect('on_receipt_photo', setOdometerInputMethod)}
                         >
-                            <span className="text-2xl mb-1">🧾</span> I Wrote on the Receipt
+                            <span className="text-2xl mb-1">🧾</span> I Wrote It On The Receipt
                         </div>
                         <div
                             className={`flex-1 min-w-[100px] h-24 border-2 rounded-lg flex flex-col items-center justify-center text-center text-sm font-bold cursor-pointer transition-all duration-300 transform hover:scale-105 p-2
@@ -212,7 +211,7 @@ function GasLogForm() {
                `}
                             onClick={() => handleSquareSelect('manual', setOdometerInputMethod)}
                         >
-                            <span className="text-2xl mb-1">⌨️</span> I'll type it
+                            <span className="text-2xl mb-1">⌨️</span> I'll Type It
                         </div>
                     </div>
                 </div>
@@ -227,7 +226,7 @@ function GasLogForm() {
                         <div className="relative">
                             <label htmlFor="odometerPhoto"
                                   className="flex items-center justify-center w-full py-3 px-4 bg-blue-50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 font-medium rounded-lg border-2 border-blue-200 dark:border-gray-700 cursor-pointer transition-colors duration-300">
-                                <span className="mr-2">📸</span> Tomar/Seleccionar foto
+                                <span className="mr-2">📸</span> Take/Upload a photo
                             </label>
                             <input
                                 type="file"
@@ -300,7 +299,7 @@ function GasLogForm() {
                 <div className="mb-7">
                     <label
                         className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
-                        Did you remember to fill this form out last time?
+                        Did you remember to fill out this form last time?
                     </label>
                     <p className="mb-3 text-left text-sm text-gray-600 dark:text-gray-400 italic transition-colors duration-300">
                         It's okay if you didn't. Just let us know so we know how to track gas mileage.
@@ -332,7 +331,7 @@ function GasLogForm() {
                         className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 shadow-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Submitting...' : 'Submit Log'}
+                        {isSubmitting ? 'Submitting...' : 'Submit'}
                     </button>
                 </div>
 
