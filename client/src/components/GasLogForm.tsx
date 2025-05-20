@@ -1,6 +1,8 @@
 'use client';
 
 import React, {useState, useEffect} from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+
 
 function GasLogForm() {
     // State to hold form data
@@ -17,6 +19,10 @@ function GasLogForm() {
 
     // Estado seguro para el tema con valor predeterminado
     const [theme, setTheme] = useState<string>('light');
+
+    // Auth0
+    const { user, logout, isAuthenticated, isLoading } = useAuth0();
+
 
     // Efecto para inicializar el tema desde localStorage (solo en cliente)
     useEffect(() => {
@@ -217,17 +223,34 @@ function GasLogForm() {
 
     return (
         <div className="container mx-auto p-6 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 min-h-screen flex items-center justify-center transition-colors duration-300">
-            <form onSubmit={handleSubmit}
-                  className="bg-white dark:bg-gray-700 p-10 rounded-xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-600 transition-colors duration-300">
-                <div className="flex justify-end mb-4">
-                    <button
+            <form
+                onSubmit={handleSubmit}
+                className="bg-white dark:bg-gray-700 p-10 rounded-xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-600 transition-colors duration-300"
+            >
+                {/* Auth0 User Info and Logout */}
+                <div className="flex justify-between items-center mb-4">
+                    {/* <button
                         type="button"
                         onClick={toggleTheme}
                         className="p-2 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300"
                         aria-label="Toggle theme"
                     >
                         {theme === 'light' ? '🌙' : '☀️'}
-                    </button>
+                    </button> */}
+                    {isAuthenticated && user && (
+                        <div className="flex items-center space-x-2 justify-end w-full">
+                            <span className="px-3 py-1 rounded-lg border-1 font-semibold text-sm transition-colors duration-300">
+                                {user.name}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                                className="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400"
+                            >
+                                Log Out
+                            </button>
+                        </div>
+)}
                 </div>
 
                 <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 dark:text-white transition-colors duration-300">Gas and Mileage Tracking</h2>
