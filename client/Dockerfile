@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Copiar archivos de configuración
 COPY package*.json .
-COPY next.config.ts .
 
 # Instalar dependencias
 RUN npm ci
