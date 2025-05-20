@@ -275,7 +275,7 @@ function GasLogForm() {
               `}
                             onClick={() => handleSquareSelect('separate_photo', setOdometerInputMethod)}
                         >
-                            <span className="text-2xl mb-1">🚗</span> I'll Take A Photo
+                            <span className="text-2xl mb-1">📸</span> I'll Take A Photo
                         </div>
                         <div
                             className={`flex-1 min-w-[100px] h-24 border-2 rounded-lg flex flex-col items-center justify-center text-center text-sm font-bold cursor-pointer transition-all duration-300 transform hover:scale-105 p-2
