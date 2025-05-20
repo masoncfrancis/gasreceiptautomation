@@ -1,6 +1,6 @@
 # Gas Receipt Processor Backend
 
-## Flow
+## User/Processing Flow
 
 1. User logs in
 2. User chooses car they filled up
