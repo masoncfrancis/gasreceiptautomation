@@ -46,7 +46,6 @@ From this receipt, please obtain results for the following data scheme and give 
                 }
             },
             "required": [
-                "hasOdometerWritten",
                 "totalCost",
                 "gallonsPurchased",
                 "datetime",
