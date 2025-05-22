@@ -14,3 +14,44 @@
     * Location of purchase
 6. Format this information to look nice
 7. Submit to LubeLogger
+
+## Prompt for data (not including odometer)
+
+```text
+From this receipt, please obtain results for the following data scheme and give response in JSON:
+        {
+            "properties": {
+                "totalCost": {
+                    "type": "number",
+                    "format": "decimal",
+                    "description": "Total cost of the fuel purchase"
+                },
+                "gallonsPurchased": {
+                    "type": "number",
+                    "format": "decimal",
+                    "description": "Number of gallons purchased"
+                },
+                "datetime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date and time of the purchase"
+                },
+                "storeBrand": {
+                    "type": "string",
+                    "description": "Brand of the gas station"
+                },
+                "storeAddress": {
+                    "type": "string",
+                    "description": "Address of the gas station"
+                }
+            },
+            "required": [
+                "hasOdometerWritten",
+                "totalCost",
+                "gallonsPurchased",
+                "datetime",
+                "storeBrand",
+                "storeAddress"
+            ]
+            }
+```

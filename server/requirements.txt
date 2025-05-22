@@ -1,4 +1,0 @@
-pyjwt==2.10.*
-python-dotenv==1.1.*
-fastapi[standard]==0.115.*
-openai==1.79.*
