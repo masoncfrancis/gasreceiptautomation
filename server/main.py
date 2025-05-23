@@ -1,5 +1,6 @@
 from google import genai
 from PIL import Image
+from dotenv import load_dotenv
 import io
 import os
 import json # To parse the JSON response
@@ -15,13 +16,7 @@ except ImportError:
 except Exception as e:
     print(f"Error registering Pillow-HEIF: {e}")
 
-# Configure the API key
-try:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-except KeyError:
-    print("Please set the GEMINI_API_KEY environment variable.")
-    print("You can get one from https://ai.google.dev/gemini-api/docs/api-key")
-    exit()
+
 
 def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
     """
@@ -36,26 +31,30 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
     if not os.path.exists(imagePath):
         print(f"Error: Image file not found at '{imagePath}'. Please ensure the image exists.")
         return
+    
+
 
     try:
+        # Configure the API key
+        try:
+            client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+        except ValueError:
+            print("Please set the GEMINI_API_KEY environment variable.")
+            print("You can get one from https://ai.google.dev/gemini-api/docs/api-key")
+            print("Exiting...")
+            exit()
+
         img = Image.open(imagePath)
 
-        # Define the generation configuration for structured output
-        generationConfig = genai.GenerationConfig(
-            response_mime_type="application/json",
-            response_schema=responseSchema
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-lite",
+            contents=[img, textPrompt],
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": responseSchema,
+            }
         )
 
-        # Initialize the Gemini Pro Vision model with the generation config
-        model = genai.GenerativeModel(
-            'gemini-2.0-flash-lite',
-            generation_config=generationConfig
-        )
-
-        print("Sending prompt with image")
-
-        # Send the prompt and image to the model
-        response = model.generate_content([textPrompt, img])
 
         # Attempt to parse the JSON response
         try:
@@ -81,7 +80,9 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
 
 if __name__ == "__main__":
 
-    receiptImagePath = "testimages/receipt1.jpg"
+    load_dotenv()
+
+    receiptImagePath = "testimages/receipt3.jpg"
 
     # Define the JSON schema for the expected response
     receiptDataSchema = {
