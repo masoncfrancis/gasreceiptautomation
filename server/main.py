@@ -61,13 +61,23 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
         try:
             print("Parsing JSON Response")
             parsedResponse = json.loads(response.text)
+            return parsedResponse
+        
         except json.JSONDecodeError:
             print("\nError: Model did not return valid JSON despite schema request.")
             print("Please check the model's response and your schema for consistency.")
-
+            return {
+                "error": "Invalid JSON response",
+                "response": response.text
+            }
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        return {
+            "error": str(e),
+            "response": None
+        }
+    
 
 if __name__ == "__main__":
     myImagePath = "testimages/receipt1"
