@@ -253,7 +253,7 @@ function GasLogForm() {
 )}
                 </div>
 
-                <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 dark:text-white transition-colors duration-300">Gas and Mileage Tracking</h2>
+                <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 dark:text-white transition-colors duration-300">Gas and Mileage Submission</h2>
 
                 {/* Receipt Photo Input - Estilizado */}
                 <div className="mb-7">
