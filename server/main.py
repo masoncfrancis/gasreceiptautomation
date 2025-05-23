@@ -78,9 +78,7 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
         }
     
 
-if __name__ == "__main__":
-
-    load_dotenv()
+def getReceiptPromptInfo():
 
     receiptImagePath = "testimages/receipt3.jpg"
 
@@ -121,6 +119,16 @@ if __name__ == "__main__":
     }
 
     receiptDataPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt."
+
+    return receiptImagePath, receiptDataPrompt, receiptDataSchema
+
+
+
+if __name__ == "__main__":
+
+    load_dotenv()
+
+    receiptImagePath, receiptDataPrompt, receiptDataSchema = getReceiptPromptInfo()
 
     receiptData = sendImagePromptWithSchema(receiptImagePath, receiptDataPrompt, receiptDataSchema)
 
