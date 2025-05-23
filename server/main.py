@@ -80,10 +80,11 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
     
 
 if __name__ == "__main__":
-    myImagePath = "testimages/receipt1"
+
+    receiptImagePath = "testimages/receipt1.jpg"
 
     # Define the JSON schema for the expected response
-    myResponseSchema = {
+    receiptDataSchema = {
         "type": "object",
         "properties": {
             "totalCost": {
@@ -118,9 +119,9 @@ if __name__ == "__main__":
         ]
     }
 
-    myTextPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt."
+    receiptDataPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt."
 
-    sendImagePromptWithSchema(myImagePath, myTextPrompt, myResponseSchema)
+    sendImagePromptWithSchema(receiptImagePath, receiptDataPrompt, receiptDataSchema)
 
     # --- Example with a different prompt (commented out for brevity) ---
     # myImagePath2 = "path/to/another/image.webp"
