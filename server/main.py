@@ -52,21 +52,15 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
             generation_config=generationConfig
         )
 
-        print(f"Sending prompt: '{textPrompt}' with image: '{imagePath}'...")
-        print(f"Expecting response to conform to schema:\n{json.dumps(responseSchema, indent=2)}")
+        print("Sending prompt with image")
 
         # Send the prompt and image to the model
         response = model.generate_content([textPrompt, img])
 
-        # Print the raw text response
-        print("\nRaw Model Response Text:")
-        print(response.text)
-
         # Attempt to parse the JSON response
         try:
+            print("Parsing JSON Response")
             parsedResponse = json.loads(response.text)
-            print("\nParsed JSON Response:")
-            print(json.dumps(parsedResponse, indent=2))
         except json.JSONDecodeError:
             print("\nError: Model did not return valid JSON despite schema request.")
             print("Please check the model's response and your schema for consistency.")
@@ -76,33 +70,45 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    # IMPORTANT: Replace 'path/to/your/image.jpg' with the actual path to your image file.
     myImagePath = "testimages/receipt1"
 
     # Define the JSON schema for the expected response
     myResponseSchema = {
         "type": "object",
         "properties": {
-            "description": {
-                "type": "string",
-                "description": "A general description of the image."
+            "totalCost": {
+                "type": "number",
+                "format": "float",
+                "description": "Total cost of the fuel purchase"
             },
-            "objectsDetected": {  # Changed to camelCase
-                "type": "array",
-                "description": "A list of prominent objects identified in the image.",
-                "items": {
-                    "type": "string"
-                }
+            "gallonsPurchased": {
+                "type": "number",
+                "format": "float",
+                "description": "Number of gallons purchased"
             },
-            "mainColor": { # Changed to camelCase
+            "datetime": {
                 "type": "string",
-                "description": "The dominant color in the image."
+                "description": "Date and time of the purchase, formatted as MM/DD/YYYY HH:MM"
+            },
+            "storeBrand": {
+                "type": "string",
+                "description": "Brand of the gas station"
+            },
+            "storeAddress": {
+                "type": "string",
+                "description": "Address of the gas station"
             }
         },
-        "required": ["description", "objectsDetected", "mainColor"] # Changed to camelCase
+        "required": [
+            "totalCost",
+            "gallonsPurchased",
+            "datetime",
+            "storeBrand",
+            "storeAddress"
+        ]
     }
 
-    myTextPrompt = "Analyze the image and provide a description, list the objects detected, and state the main color. Format the response as JSON according to the provided schema."
+    myTextPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt."
 
     sendImagePromptWithSchema(myImagePath, myTextPrompt, myResponseSchema)
 
