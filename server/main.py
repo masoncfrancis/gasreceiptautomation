@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google import genai
 from PIL import Image
 import io
 import os
@@ -48,7 +48,7 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
 
         # Initialize the Gemini Pro Vision model with the generation config
         model = genai.GenerativeModel(
-            'gemini-pro-vision',
+            'gemini-2.0-flash-lite',
             generation_config=generationConfig
         )
 
@@ -121,7 +121,14 @@ if __name__ == "__main__":
 
     receiptDataPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt."
 
-    sendImagePromptWithSchema(receiptImagePath, receiptDataPrompt, receiptDataSchema)
+    receiptData = sendImagePromptWithSchema(receiptImagePath, receiptDataPrompt, receiptDataSchema)
+
+    if receiptData:
+        if "error" in receiptData:
+            print("Error in response:", receiptData["error"])
+        else:
+            print("Parsed Receipt Data:")
+            print(json.dumps(receiptData, indent=4))
 
     # --- Example with a different prompt (commented out for brevity) ---
     # myImagePath2 = "path/to/another/image.webp"
