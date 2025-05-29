@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: Gas Log Submission API
+  version: 1.0.0
+  description: API for submitting gas receipts and odometer readings.
+paths:
+  /api/submitgas:
+    post:
+      summary: Submit gas receipt and odometer information
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                receiptPhoto:
+                  type: string
+                  format: binary
+                  description: Photo of the gas receipt (required)
+                odometerPhoto:
+                  type: string
+                  format: binary
+                  description: Photo of the odometer (required if odometerInputMethod is 'separatephoto')
+                odometerReading:
+                  type: string
+                  description: Manual odometer reading (required if odometerInputMethod is 'manual')
+                odometerInputMethod:
+                  type: string
+                  enum: [separatephoto, onreceipt, manual]
+                  description: How the odometer reading is provided
+                filledToFull:
+                  type: string
+                  enum: [yes, no]
+                  description: Whether the car was filled to full
+                filledLastTime:
+                  type: string
+                  enum: [yes, no]
+                  description: Whether the form was filled last time
+              required:
+                - receiptPhoto
+                - odometerInputMethod
+                - filledToFull
+                - filledLastTime
+      responses:
+        '200':
+          description: Submission successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Form submitted successfully
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing required fields
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
