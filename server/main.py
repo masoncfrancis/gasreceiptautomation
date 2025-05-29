@@ -8,6 +8,9 @@ from typing import Optional
 import io
 import os
 import json # To parse the JSON response
+import requests 
+
+load_dotenv()
 
 app = FastAPI(
     title="Gas Log Submission API",
@@ -45,11 +48,27 @@ async def submit_gas(
 
 @app.get("/vehicles")
 async def get_vehicles():
-    # Example static list; replace with DB query as needed
+    # Get LUBELOGGER_URL from environment
+    lube_logger_url = os.environ.get("LUBELOGGER_URL")
+    if not lube_logger_url:
+        raise HTTPException(status_code=500, detail="LUBELOGGER_URL not set in environment")
+
+    try:
+        resp = requests.get(f"{lube_logger_url}/api/vehicles")
+        resp.raise_for_status()
+        vehicles_data = resp.json()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch vehicles: {e}")
+
+    # Extract only year, make, model for each vehicle
     vehicles = [
-        {"year": 2020, "make": "Toyota", "model": "Camry"},
-        {"year": 2018, "make": "Honda", "model": "Civic"},
-        {"year": 2022, "make": "Ford", "model": "F-150"},
+        {
+            "year": v.get("year"),
+            "make": v.get("make"),
+            "model": v.get("model")
+        }
+        for v in vehicles_data
     ]
+
     return {"vehicles": vehicles}
 
