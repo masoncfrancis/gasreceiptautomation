@@ -3,4 +3,7 @@ services:
     image: ghcr.io/hargata/lubelogger:latest
     restart: unless-stopped
     ports:
-      - 8080:8080
+      - "8080:8080"
+    volumes: 
+      - "./temp/lubelogger/data:/App/data"
+      - "./temp/lubelogger/keys:/root/.aspnet/DataProtection-Keys"
