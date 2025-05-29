@@ -144,8 +144,8 @@ function GasLogForm() {
             setVehiclesLoading(true);
             setVehiclesError(null);
             try {
-                // Replace with your actual API endpoint
-                const response = await fetch('/api/vehicles');
+                const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+                const response = await fetch(`${baseUrl}/vehicles`);
                 if (!response.ok) throw new Error('Failed to fetch vehicles');
                 const data = await response.json();
                 setVehicles(data);
@@ -228,7 +228,8 @@ function GasLogForm() {
         formData.append('filledToFull', filledToFull);
         formData.append('filledLastTime', filledLastTime);
 
-        const apiEndpoint = 'YOUR_BACKEND_API_ENDPOINT';
+        const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+        const apiEndpoint = `${baseUrl}/submitGas`;
 
         try {
             const response = await fetch(apiEndpoint, {
