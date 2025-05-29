@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: API for submitting gas receipts and odometer readings.
 paths:
-  /api/submitgas:
+  /submitGas:
     post:
       summary: Submit gas receipt and odometer information
       requestBody:
@@ -73,3 +73,29 @@ paths:
                   error:
                     type: string
                     example: Internal server error
+  /vehicles:
+    get:
+      summary: Retrieve a list of vehicles
+      responses:
+        '200':
+          description: List of vehicles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vehicles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        year:
+                          type: integer
+                          example: 2020
+                        make:
+                          type: string
+                          example: Toyota
+                        model:
+                          type: string
+                          example: Camry
+                          

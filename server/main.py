@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/api/submitgas")
+@app.post("/submitGas")
 async def submit_gas(
     receiptPhoto: UploadFile = File(..., description="Photo of the gas receipt (required)"),
     odometerPhoto: Optional[UploadFile] = File(None, description="Photo of the odometer (required if odometerInputMethod is 'separatephoto')"),
@@ -42,4 +42,14 @@ async def submit_gas(
     # TODO: Save files and data as needed
 
     return JSONResponse(content={"message": "Form submitted successfully"})
+
+@app.get("/vehicles")
+async def get_vehicles():
+    # Example static list; replace with DB query as needed
+    vehicles = [
+        {"year": 2020, "make": "Toyota", "model": "Camry"},
+        {"year": 2018, "make": "Honda", "model": "Civic"},
+        {"year": 2022, "make": "Ford", "model": "F-150"},
+    ]
+    return {"vehicles": vehicles}
 
