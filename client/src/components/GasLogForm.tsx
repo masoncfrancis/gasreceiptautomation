@@ -148,9 +148,20 @@ function GasLogForm() {
                 const response = await fetch(`${baseUrl}/vehicles`);
                 if (!response.ok) throw new Error('Failed to fetch vehicles');
                 const data = await response.json();
-                setVehicles(data);
+                if (Array.isArray(data.vehicles)) {
+                    setVehicles(
+                        data.vehicles.map((v, idx) => ({
+                            id: `${v.year}-${v.make}-${v.model}-${idx}`,
+                            name: `${v.year} ${v.make} ${v.model}`
+                        }))
+                    );
+                } else {
+                    setVehicles([]);
+                    setVehiclesError('Invalid data format received from server');
+                }
             } catch (err: any) {
                 setVehiclesError('Could not load vehicles');
+                setVehicles([]);
             } finally {
                 setVehiclesLoading(false);
             }
@@ -279,7 +290,30 @@ function GasLogForm() {
                 onSubmit={handleSubmit}
                 className="bg-white dark:bg-gray-700 p-10 rounded-xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-600 transition-colors duration-300"
             >
-                {/* Vehicle Selection */}
+                {/* Auth0 User Info and Logout */}
+                {isAuthenticated && user && (
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center space-x-2 justify-end w-full">
+                            <span className="px-3 py-1 rounded-lg border-1 font-semibold text-sm transition-colors duration-300">
+                                {user.name}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                                className="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400"
+                            >
+                                Log Out
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Title Header - Always visible */}
+                <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 dark:text-white transition-colors duration-300">
+                    Gas and Mileage Submission
+                </h2>
+
+                {/* Vehicle Selection - Always below title */}
                 <div className="mb-7">
                     <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
                         Select your vehicle: <span className="text-red-500">*</span>
@@ -287,18 +321,24 @@ function GasLogForm() {
                     {vehiclesError ? (
                         <p className="text-red-500">{vehiclesError}</p>
                     ) : (
-                        <select
-                            id="selectedVehicle"
-                            value={selectedVehicle}
-                            onChange={handleVehicleChange}
-                            className={`w-full py-2 px-3 border rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 ${validationErrors.selectedVehicle ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} transition-colors duration-300`}
-                            required
-                        >
-                            <option value="">-- Select a vehicle --</option>
+                        <div className="flex flex-wrap gap-4">
                             {vehicles.map(vehicle => (
-                                <option key={vehicle.id} value={vehicle.id}>{vehicle.name}</option>
+                                <button
+                                    key={vehicle.id}
+                                    type="button"
+                                    onClick={() => setSelectedVehicle(vehicle.id)}
+                                    className={`flex-1 min-w-[120px] px-4 py-3 rounded-lg border-2 font-semibold text-center transition-colors duration-300
+                                        ${selectedVehicle === vehicle.id
+                                            ? 'bg-blue-600 text-white border-blue-700 shadow-lg'
+                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500'}
+                                        ${validationErrors.selectedVehicle ? 'border-red-500' : ''}
+                                    `}
+                                    aria-pressed={selectedVehicle === vehicle.id}
+                                >
+                                    {vehicle.name}
+                                </button>
                             ))}
-                        </select>
+                        </div>
                     )}
                     {validationErrors.selectedVehicle && <ErrorMessage message={validationErrors.selectedVehicle} />}
                 </div>
@@ -310,34 +350,6 @@ function GasLogForm() {
                     </div>
                 ) : (
                     <>
-                        {/* Auth0 User Info and Logout */}
-                        <div className="flex justify-between items-center mb-4">
-                            {/* <button
-                                type="button"
-                                onClick={toggleTheme}
-                                className="p-2 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300"
-                                aria-label="Toggle theme"
-                            >
-                                {theme === 'light' ? '🌙' : '☀️'}
-                            </button> */}
-                            {isAuthenticated && user && (
-                                <div className="flex items-center space-x-2 justify-end w-full">
-                                    <span className="px-3 py-1 rounded-lg border-1 font-semibold text-sm transition-colors duration-300">
-                                        {user.name}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-                                        className="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400"
-                                    >
-                                        Log Out
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        <h2 className="text-3xl font-extrabold mb-8 text-center text-gray-800 dark:text-white transition-colors duration-300">Gas and Mileage Submission</h2>
-
                         {/* Receipt Photo Input - Estilizado */}
                         <div className="mb-7">
                             <label
