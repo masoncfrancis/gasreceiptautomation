@@ -1,5 +1,5 @@
 google-genai==1.17.*
 pillow==11.2.*
 pillow-heif==0.22.*
-fastapi==0.115.*
+fastapi[standard]==0.115.*
 python-dotenv==1.1.*
