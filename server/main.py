@@ -51,7 +51,7 @@ async def get_vehicles():
     # Get LUBELOGGER_URL from environment
     lube_logger_url = os.environ.get("LUBELOGGER_URL")
     if not lube_logger_url:
-        raise HTTPException(status_code=500, detail="LUBELOGGER_URL not set in environment")
+        raise HTTPException(status_code=503, detail="LubeLogger server URL not set in environment, cannot access LubeLogger")
 
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles")
@@ -72,3 +72,16 @@ async def get_vehicles():
 
     return {"vehicles": vehicles}
 
+@app.get("/health")
+async def health_check():
+    lube_logger_url = os.environ.get("LUBELOGGER_URL")
+    if not lube_logger_url:
+        return JSONResponse(content={"error": "LubeLogger server URL not set in environment, cannot access LubeLogger"}, status_code=503)
+    try:
+        resp = requests.get(f"{lube_logger_url}/api/vehicles", timeout=5)
+        if resp.status_code == 200:
+            return JSONResponse(content={"status": "ok"}, status_code=200)
+        else:
+            return JSONResponse(content={"error": f"LubeLogger returned status {resp.status_code}"}, status_code=502)
+    except Exception as e:
+        return JSONResponse(content={"error": f"Failed to reach LubeLogger: {e}"}, status_code=502)

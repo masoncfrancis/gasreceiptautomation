@@ -98,4 +98,37 @@ paths:
                         model:
                           type: string
                           example: Camry
-                          
+  /health:
+    get:
+      summary: Check the health of the API
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+        '502':
+          description: Bad Gateway
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Gateway
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Service Unavailable
