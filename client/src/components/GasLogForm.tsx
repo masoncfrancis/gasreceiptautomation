@@ -25,8 +25,8 @@ function GasLogForm() {
     const { user, logout, isAuthenticated, isLoading } = useAuth0();
 
     // Vehicle selection state
-    const [vehicles, setVehicles] = useState<{ id: string, name: string }[]>([]);
-    const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+    const [vehicles, setVehicles] = useState<{ id: string, vehicleId: number, name: string }[]>([]);
+    const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
     const [vehiclesLoading, setVehiclesLoading] = useState<boolean>(true);
     const [vehiclesError, setVehiclesError] = useState<string | null>(null);
 
@@ -128,9 +128,8 @@ function GasLogForm() {
     };
 
     // Handle vehicle selection
-    const handleVehicleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedVehicle(e.target.value);
-        // Optionally clear validation errors for vehicle
+    const handleVehicleButtonClick = (vehicleId: number) => {
+        setSelectedVehicle(vehicleId);
         setValidationErrors(prev => {
             const newErrors = { ...prev };
             delete newErrors['selectedVehicle'];
@@ -152,6 +151,7 @@ function GasLogForm() {
                     setVehicles(
                         data.vehicles.map((v, idx) => ({
                             id: `${v.year}-${v.make}-${v.model}-${idx}`,
+                            vehicleId: v.vehicleId,
                             name: `${v.year} ${v.make} ${v.model}`
                         }))
                     );
@@ -174,7 +174,7 @@ function GasLogForm() {
         const errors: Record<string, string> = {};
 
         // Vehicle selection validation
-        if (!selectedVehicle) {
+        if (selectedVehicle === null) {
             errors.selectedVehicle = "Please select a vehicle";
         }
 
@@ -224,7 +224,7 @@ function GasLogForm() {
         // Create a FormData object to handle file uploads
         const formData = new FormData();
         // Add selected vehicle
-        formData.append('vehicleId', selectedVehicle);
+        formData.append('vehicleId', String(selectedVehicle));
         if (receiptPhoto) {
             formData.append('receiptPhoto', receiptPhoto);
         }
@@ -257,7 +257,7 @@ function GasLogForm() {
                 setOdometerInputMethod('');
                 setFilledToFull('');
                 setFilledLastTime('');
-                setSelectedVehicle('');
+                setSelectedVehicle(null);
                 // Clear validation errors on successful submission
                 setValidationErrors({});
             } else {
@@ -321,19 +321,19 @@ function GasLogForm() {
                     {vehiclesError ? (
                         <p className="text-red-500">{vehiclesError}</p>
                     ) : (
-                        <div className="flex flex-wrap gap-4">
+                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                             {vehicles.map(vehicle => (
                                 <button
                                     key={vehicle.id}
                                     type="button"
-                                    onClick={() => setSelectedVehicle(vehicle.id)}
-                                    className={`flex-1 min-w-[120px] px-4 py-3 rounded-lg border-2 font-semibold text-center transition-colors duration-300
-                                        ${selectedVehicle === vehicle.id
+                                    onClick={() => handleVehicleButtonClick(vehicle.vehicleId)}
+                                    className={`w-full px-4 py-3 rounded-lg border-2 font-semibold text-center transition-colors duration-300
+                                        ${selectedVehicle === vehicle.vehicleId
                                             ? 'bg-blue-600 text-white border-blue-700 shadow-lg'
                                             : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500'}
                                         ${validationErrors.selectedVehicle ? 'border-red-500' : ''}
                                     `}
-                                    aria-pressed={selectedVehicle === vehicle.id}
+                                    aria-pressed={selectedVehicle === vehicle.vehicleId}
                                 >
                                     {vehicle.name}
                                 </button>

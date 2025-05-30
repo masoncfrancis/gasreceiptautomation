@@ -14,6 +14,10 @@ paths:
             schema:
               type: object
               properties:
+                vehicleId:
+                  type: integer
+                  description: ID of the vehicle (required)
+                  example: 1
                 receiptPhoto:
                   type: string
                   format: binary
@@ -38,6 +42,7 @@ paths:
                   enum: [yes, no]
                   description: Whether the form was filled last time
               required:
+                - vehicleId
                 - receiptPhoto
                 - odometerInputMethod
                 - filledToFull
@@ -73,6 +78,26 @@ paths:
                   error:
                     type: string
                     example: Internal server error
+        '502':
+          description: Bad Gateway
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Gateway
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Service Unavailable
   /vehicles:
     get:
       summary: Retrieve a list of vehicles
@@ -89,7 +114,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        id:
+                        vehicleId:
                           type: integer
                           example: 1
                         year:
@@ -101,6 +126,36 @@ paths:
                         model:
                           type: string
                           example: Camry
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid request
+        '500':
+            description: Server error
+            content:
+              application/json:
+                schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: Internal server error
+        '502':
+            description: Bad Gateway
+            content:
+              application/json:
+                schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: Bad Gateway
   /health:
     get:
       summary: Check the health of the API

@@ -12,6 +12,12 @@ import requests
 
 load_dotenv()
 
+# Check if LUBELOGGER_URL is set in the environment. Quit if not set.
+lube_logger_url = os.environ.get("LUBELOGGER_URL")
+if not lube_logger_url:
+    raise ValueError("[ACTION REQUIRED] LubeLogger server URL environment variable (LUBELOGGER_URL) is not set")
+
+
 app = FastAPI(
     title="Gas Log Submission API",
     version="1.0.0",
@@ -70,7 +76,7 @@ async def get_vehicles():
 
     vehicles = [
         {
-            "id": v.get("id"),
+            "vehicleId": v.get("id"),
             "year": v.get("year"),
             "make": v.get("make"),
             "model": v.get("model")
