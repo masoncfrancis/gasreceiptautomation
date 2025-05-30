@@ -89,6 +89,9 @@ paths:
                     items:
                       type: object
                       properties:
+                        id:
+                          type: integer
+                          example: 1
                         year:
                           type: integer
                           example: 2020

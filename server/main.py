@@ -60,14 +60,22 @@ async def get_vehicles():
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch vehicles: {e}")
 
-    # Extract only year, make, model for each vehicle
+    # Filtrar vehículos: excluir si showInReceiptApp == "false"
+    def should_include(vehicle):
+        extra_fields = vehicle.get("extraFields", [])
+        for field in extra_fields:
+            if field.get("name") == "showInReceiptApp" and field.get("value") == "false":
+                return False
+        return True
+
     vehicles = [
         {
+            "id": v.get("id"),
             "year": v.get("year"),
             "make": v.get("make"),
             "model": v.get("model")
         }
-        for v in vehicles_data
+        for v in vehicles_data if should_include(v)
     ]
 
     return {"vehicles": vehicles}
