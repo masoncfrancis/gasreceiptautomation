@@ -9,6 +9,7 @@ import io
 import os
 import json # To parse the JSON response
 import requests 
+import proc
 
 load_dotenv()
 
@@ -33,6 +34,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Function to send image and text prompt to AI and get structured data
+def sendDataToAI(imageFile):
+    receiptDataPrompt, receiptDataSchema = proc.getReceiptPromptInfo()
+    return proc.sendImagePromptWithSchema(imageFile, receiptDataPrompt, receiptDataSchema)
+
 @app.post("/submitGas")
 async def submit_gas(
     receiptPhoto: UploadFile = File(..., description="Photo of the gas receipt (required)"),
@@ -48,9 +55,13 @@ async def submit_gas(
     if odometerInputMethod == "manual" and not odometerReading:
         raise HTTPException(status_code=400, detail="odometerReading is required when odometerInputMethod is 'manual'")
 
-    # TODO: Save files and data as needed
+    # Enviar la foto del recibo a la IA para extraer datos
+    receipt_data = sendDataToAI(receiptPhoto)
 
-    return JSONResponse(content={"message": "Form submitted successfully"})
+    return JSONResponse(content={
+        "message": "Form submitted successfully",
+        "receiptData": receipt_data
+    })
 
 @app.get("/vehicles")
 async def get_vehicles():

@@ -18,24 +18,18 @@ except Exception as e:
 
 
 
-def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
+def sendImagePromptWithSchema(imageFile, textPrompt, responseSchema):
     """
-    Sends a text prompt and an image to the Gemini model, requesting the response
-    to adhere to a specified JSON schema.
+    Envía un prompt de texto y una imagen al modelo Gemini, solicitando la respuesta
+    conforme a un esquema JSON especificado.
 
     Args:
-        imagePath (str): The path to the image file.
-        textPrompt (str): The text prompt to send with the image.
-        responseSchema (dict): The JSON schema the response should follow.
+        imageFile (file-like object or bytes): El archivo de imagen recibido.
+        textPrompt (str): El prompt de texto a enviar con la imagen.
+        responseSchema (dict): El esquema JSON que debe seguir la respuesta.
     """
-    if not os.path.exists(imagePath):
-        print(f"Error: Image file not found at '{imagePath}'. Please ensure the image exists.")
-        return
-    
-
-
     try:
-        # Configure the API key
+        # Configurar la API key
         try:
             client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
         except ValueError:
@@ -44,7 +38,17 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
             print("Exiting...")
             exit()
 
-        img = Image.open(imagePath)
+        # Abrir la imagen desde el archivo recibido
+        if hasattr(imageFile, "file"):
+            # FastAPI UploadFile
+            img = Image.open(imageFile.file)
+        elif hasattr(imageFile, "read"):
+            # file-like object
+            img = Image.open(imageFile)
+        elif isinstance(imageFile, bytes):
+            img = Image.open(io.BytesIO(imageFile))
+        else:
+            raise ValueError("imageFile debe ser un archivo, objeto tipo archivo o bytes.")
 
         response = client.models.generate_content(
             model="gemini-2.0-flash-lite",
@@ -55,13 +59,12 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
             }
         )
 
-
-        # Attempt to parse the JSON response
+        # Intentar parsear la respuesta JSON
         try:
             print("Parsing JSON Response")
             parsedResponse = json.loads(response.text)
             return parsedResponse
-        
+
         except json.JSONDecodeError:
             print("\nError: Model did not return valid JSON despite schema request.")
             print("Please check the model's response and your schema for consistency.")
@@ -79,8 +82,6 @@ def sendImagePromptWithSchema(imagePath, textPrompt, responseSchema):
     
 
 def getReceiptPromptInfo():
-
-    receiptImagePath = "testimages/receipt3.jpg"
 
     # Define the JSON schema for the expected response
     receiptDataSchema = {
@@ -120,7 +121,7 @@ def getReceiptPromptInfo():
 
     receiptDataPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt."
 
-    return receiptImagePath, receiptDataPrompt, receiptDataSchema
+    return receiptDataPrompt, receiptDataSchema
 
 
 
