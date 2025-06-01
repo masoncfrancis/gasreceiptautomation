@@ -124,6 +124,32 @@ def getReceiptPromptInfo():
     return receiptDataPrompt, receiptDataSchema
 
 
+def getOdometerPromptInfo(imageType):
+
+    # Define the JSON schema for the expected response
+    odometerDataSchema = {
+        "type": "object",
+        "properties": {
+            "odometerReading": {
+                "type": "integer",
+                "description": "Odometer reading as an integer value"
+            }
+        },
+        "required": [
+            "odometerReading"
+        ]
+    }
+
+    if imageType == "receipt":
+        odometerDataPrompt = "Obtain the odometer number that is handwritten on this receipt."
+    elif imageType == "odometer":
+        odometerDataPrompt = "Obtain the odometer reading from this photo of a vehicle's dashboard."
+    else:
+        raise ValueError("Invalid image type. Must be 'receipt' or 'odometer'.")
+
+    return odometerDataPrompt, odometerDataSchema
+
+
 
 if __name__ == "__main__":
 
