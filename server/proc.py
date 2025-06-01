@@ -20,16 +20,16 @@ except Exception as e:
 
 def sendImagePromptWithSchema(imageFile, textPrompt, responseSchema):
     """
-    Envía un prompt de texto y una imagen al modelo Gemini, solicitando la respuesta
-    conforme a un esquema JSON especificado.
+    Sends a text prompt and an image to the Gemini model, requesting the response
+    to follow a specified JSON schema.
 
     Args:
-        imageFile (file-like object or bytes): El archivo de imagen recibido.
-        textPrompt (str): El prompt de texto a enviar con la imagen.
-        responseSchema (dict): El esquema JSON que debe seguir la respuesta.
+        imageFile (file-like object or bytes): The received image file.
+        textPrompt (str): The text prompt to send with the image.
+        responseSchema (dict): The JSON schema the response should follow.
     """
     try:
-        # Configurar la API key
+        # Set up the API key
         try:
             client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
         except ValueError:
@@ -38,7 +38,7 @@ def sendImagePromptWithSchema(imageFile, textPrompt, responseSchema):
             print("Exiting...")
             exit()
 
-        # Abrir la imagen desde el archivo recibido
+        # Open the image from the received file
         if hasattr(imageFile, "file"):
             # FastAPI UploadFile
             img = Image.open(imageFile.file)
@@ -48,7 +48,7 @@ def sendImagePromptWithSchema(imageFile, textPrompt, responseSchema):
         elif isinstance(imageFile, bytes):
             img = Image.open(io.BytesIO(imageFile))
         else:
-            raise ValueError("imageFile debe ser un archivo, objeto tipo archivo o bytes.")
+            raise ValueError("imageFile must be a file, file-like object, or bytes.")
 
         response = client.models.generate_content(
             model="gemini-2.0-flash-lite",
@@ -59,7 +59,7 @@ def sendImagePromptWithSchema(imageFile, textPrompt, responseSchema):
             }
         )
 
-        # Intentar parsear la respuesta JSON
+        # Try to parse the JSON response
         try:
             print("Parsing JSON Response")
             parsedResponse = json.loads(response.text)
@@ -145,3 +145,4 @@ if __name__ == "__main__":
     # myTextPrompt2 = "What is the main subject of this picture?"
     # if myImagePath2 != "path/to/another/image.webp":
     #     sendImagePromptWithSchema(myImagePath2, myTextPrompt2, myResponseSchema)
+

@@ -55,7 +55,7 @@ async def submit_gas(
     if odometerInputMethod == "manual" and not odometerReading:
         raise HTTPException(status_code=400, detail="odometerReading is required when odometerInputMethod is 'manual'")
 
-    # Enviar la foto del recibo a la IA para extraer datos
+    # Send the receipt photo to the AI to extract data
     receipt_data = sendDataToAI(receiptPhoto)
 
     return JSONResponse(content={
@@ -77,7 +77,7 @@ async def get_vehicles():
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch vehicles: {e}")
 
-    # Filtrar vehículos: excluir si showInReceiptApp == "false"
+    # Filter vehicles: exclude if showInReceiptApp == "false"
     def should_include(vehicle):
         extra_fields = vehicle.get("extraFields", [])
         for field in extra_fields:
@@ -110,3 +110,4 @@ async def health_check():
             return JSONResponse(content={"error": f"LubeLogger returned status {resp.status_code}"}, status_code=502)
     except Exception as e:
         return JSONResponse(content={"error": f"Failed to reach LubeLogger: {e}"}, status_code=502)
+
