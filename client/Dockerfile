@@ -1,5 +1,5 @@
 # Etapa de construcción
-FROM node:alpine AS builder
+FROM node:lts-alpine AS builder
 
 # Establecer directorio de trabajo
 WORKDIR /app
@@ -12,6 +12,8 @@ RUN npm ci
 
 # Copiar código fuente
 COPY . .
+
+ARG NODE_ENV=production
 
 # Construir la aplicación
 RUN npm run build
