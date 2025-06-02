@@ -10,6 +10,7 @@ import os
 import json # To parse the JSON response
 import requests 
 import proc
+import uvicorn
 
 load_dotenv()
 
@@ -36,27 +37,51 @@ app.add_middleware(
 
 
 # Function to send image and text prompt to AI and get structured data
-def sendDataToAI(imageFile):
+def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = False):
+    """
+    Sends an image file to the AI to extract structured data from it.
+    """
+
+    imageType = "receipt"
+    if odometerInputMethod == "separate_photo":
+        imageType = "odometer"
+
+    if getOdometerOnly:
+        # If only odometer data is needed, use the odometer prompt
+        odometerPrompt, odometerSchema = proc.getOdometerPromptInfo(imageType)
+        return proc.sendImagePromptWithSchema(imageFile, odometerPrompt, odometerSchema)
+
     receiptDataPrompt, receiptDataSchema = proc.getReceiptPromptInfo()
     return proc.sendImagePromptWithSchema(imageFile, receiptDataPrompt, receiptDataSchema)
 
 @app.post("/submitGas")
 async def submit_gas(
     receiptPhoto: UploadFile = File(..., description="Photo of the gas receipt (required)"),
-    odometerPhoto: Optional[UploadFile] = File(None, description="Photo of the odometer (required if odometerInputMethod is 'separatephoto')"),
+    odometerPhoto: Optional[UploadFile] = File(None, description="Photo of the odometer (required if odometerInputMethod is 'separate_photo')"),
     odometerReading: Optional[str] = Form(None, description="Manual odometer reading (required if odometerInputMethod is 'manual')"),
     odometerInputMethod: str = Form(..., description="How the odometer reading is provided"),
     filledToFull: str = Form(..., description="Whether the car was filled to full"),
     filledLastTime: str = Form(..., description="Whether the form was filled last time"),
-):
+    ):
     # Validate conditional requirements
-    if odometerInputMethod == "separatephoto" and odometerPhoto is None:
-        raise HTTPException(status_code=400, detail="odometerPhoto is required when odometerInputMethod is 'separatephoto'")
+    if odometerInputMethod == "separate_photo" and odometerPhoto is None:
+        raise HTTPException(status_code=400, detail="odometerPhoto is required when odometerInputMethod is 'separate_photo'")
     if odometerInputMethod == "manual" and not odometerReading:
         raise HTTPException(status_code=400, detail="odometerReading is required when odometerInputMethod is 'manual'")
 
     # Send the receipt photo to the AI to extract data
-    receipt_data = sendDataToAI(receiptPhoto)
+    receipt_data = sendDataToAI(receiptPhoto, odometerInputMethod)
+    if odometerInputMethod == "separate_photo":
+        # If using a separate photo for odometer, send that photo to the AI
+        odometer_data = sendDataToAI(odometerPhoto, odometerInputMethod, getOdometerOnly=True)
+        receipt_data["odometerReading"] = odometer_data.get("odometerReading")
+
+    elif odometerInputMethod == "on_receipt_photo":
+        # If using a separate photo for odometer, send that photo to the AI
+        odometer_data = sendDataToAI(receiptPhoto, odometerInputMethod, getOdometerOnly=True)
+        print(odometer_data)
+        receipt_data["odometerReading"] = odometer_data.get("odometerReading")
+
 
     return JSONResponse(content={
         "message": "Form submitted successfully",
@@ -111,3 +136,6 @@ async def health_check():
     except Exception as e:
         return JSONResponse(content={"error": f"Failed to reach LubeLogger: {e}"}, status_code=502)
 
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -141,7 +141,7 @@ def getOdometerPromptInfo(imageType):
     }
 
     if imageType == "receipt":
-        odometerDataPrompt = "Obtain the odometer number that is handwritten on this receipt."
+        odometerDataPrompt = "Obtain the number that is handwritten on this receipt."
     elif imageType == "odometer":
         odometerDataPrompt = "Obtain the odometer reading from this photo of a vehicle's dashboard."
     else:
