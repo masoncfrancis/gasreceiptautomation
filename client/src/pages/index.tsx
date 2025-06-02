@@ -1,3 +1,5 @@
+'use client';
+
 import GasLogForm from "@/components/GasLogForm";
 import LoginLanding from "@/components/LoginLanding";
 import LoadingScreen from "@/components/LoadingScreen";

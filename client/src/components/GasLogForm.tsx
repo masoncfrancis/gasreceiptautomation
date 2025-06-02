@@ -149,7 +149,7 @@ function GasLogForm() {
                 const data = await response.json();
                 if (Array.isArray(data.vehicles)) {
                     setVehicles(
-                        data.vehicles.map((v, idx) => ({
+                        data.vehicles.map((v: { year: any; make: any; model: any; vehicleId: any; }, idx: any) => ({
                             id: `${v.year}-${v.make}-${v.model}-${idx}`,
                             vehicleId: v.vehicleId,
                             name: `${v.year} ${v.make} ${v.model}`

@@ -21,7 +21,7 @@ FROM nginx:alpine
 
 # Copiar configuración personalizada de nginx
 RUN echo 'server { \
-    listen 80; \
+    listen 8003; \
     location / { \
         root /usr/share/nginx/html; \
         try_files $uri $uri.html $uri/ /index.html; \
@@ -33,7 +33,7 @@ RUN echo 'server { \
 COPY --from=builder /app/out /usr/share/nginx/html
 
 # Exponer puerto 80
-EXPOSE 80
+EXPOSE 8003
 
 # Iniciar nginx
 CMD ["nginx", "-g", "daemon off;"]
