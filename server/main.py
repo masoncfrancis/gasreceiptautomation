@@ -71,16 +71,21 @@ async def submit_gas(
 
     # Send the receipt photo to the AI to extract data
     receipt_data = sendDataToAI(receiptPhoto, odometerInputMethod)
+
+    odometer_data = { "odometerReading": 999999 }
+
     if odometerInputMethod == "separate_photo":
         # If using a separate photo for odometer, send that photo to the AI
         odometer_data = sendDataToAI(odometerPhoto, odometerInputMethod, getOdometerOnly=True)
-        receipt_data["odometerReading"] = odometer_data.get("odometerReading")
 
     elif odometerInputMethod == "on_receipt_photo":
         # If using a separate photo for odometer, send that photo to the AI
         odometer_data = sendDataToAI(receiptPhoto, odometerInputMethod, getOdometerOnly=True)
-        print(odometer_data)
-        receipt_data["odometerReading"] = odometer_data.get("odometerReading")
+
+    elif odometerInputMethod == "manual":
+        odometer_data = { "odometerReading": int(odometerReading) if odometerReading.isdigit() else 999999 }
+
+    receipt_data["odometerReading"] = odometer_data.get("odometerReading")
 
 
     return JSONResponse(content={

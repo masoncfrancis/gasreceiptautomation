@@ -148,27 +148,3 @@ def getOdometerPromptInfo(imageType):
         raise ValueError("Invalid image type. Must be 'receipt' or 'odometer'.")
 
     return odometerDataPrompt, odometerDataSchema
-
-
-
-if __name__ == "__main__":
-
-    load_dotenv()
-
-    receiptImagePath, receiptDataPrompt, receiptDataSchema = getReceiptPromptInfo()
-
-    receiptData = sendImagePromptWithSchema(receiptImagePath, receiptDataPrompt, receiptDataSchema)
-
-    if receiptData:
-        if "error" in receiptData:
-            print("Error in response:", receiptData["error"])
-        else:
-            print("Parsed Receipt Data:")
-            print(json.dumps(receiptData, indent=4))
-
-    # --- Example with a different prompt (commented out for brevity) ---
-    # myImagePath2 = "path/to/another/image.webp"
-    # myTextPrompt2 = "What is the main subject of this picture?"
-    # if myImagePath2 != "path/to/another/image.webp":
-    #     sendImagePromptWithSchema(myImagePath2, myTextPrompt2, myResponseSchema)
-
