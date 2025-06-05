@@ -11,6 +11,8 @@ import json # To parse the JSON response
 import requests 
 import proc
 import uvicorn
+import pytz
+from datetime import datetime
 
 load_dotenv()
 
@@ -62,35 +64,106 @@ async def submit_gas(
     odometerInputMethod: str = Form(..., description="How the odometer reading is provided"),
     filledToFull: str = Form(..., description="Whether the car was filled to full"),
     filledLastTime: str = Form(..., description="Whether the form was filled last time"),
-    ):
+    vehicleId: str = Form(..., description="Id of Vehicle"),
+):
+    print("Starting gas submission process.")
+
     # Validate conditional requirements
     if odometerInputMethod == "separate_photo" and odometerPhoto is None:
+        print("Validation failed: odometerPhoto is required for 'separate_photo' method.")
         raise HTTPException(status_code=400, detail="odometerPhoto is required when odometerInputMethod is 'separate_photo'")
     if odometerInputMethod == "manual" and not odometerReading:
+        print("Validation failed: odometerReading is required for 'manual' method.")
         raise HTTPException(status_code=400, detail="odometerReading is required when odometerInputMethod is 'manual'")
 
-    # Send the receipt photo to the AI to extract data
+    print("Extracting data from receipt photo using AI.")
     receipt_data = sendDataToAI(receiptPhoto, odometerInputMethod)
 
     odometer_data = { "odometerReading": 999999 }
 
     if odometerInputMethod == "separate_photo":
-        # If using a separate photo for odometer, send that photo to the AI
+        print("Extracting odometer data from separate odometer photo using AI.")
         odometer_data = sendDataToAI(odometerPhoto, odometerInputMethod, getOdometerOnly=True)
 
     elif odometerInputMethod == "on_receipt_photo":
-        # If using a separate photo for odometer, send that photo to the AI
+        print("Extracting odometer data from receipt photo using AI.")
         odometer_data = sendDataToAI(receiptPhoto, odometerInputMethod, getOdometerOnly=True)
 
     elif odometerInputMethod == "manual":
+        print("Using manual odometer reading provided by user.")
         odometer_data = { "odometerReading": int(odometerReading) if odometerReading.isdigit() else 999999 }
 
     receipt_data["odometerReading"] = odometer_data.get("odometerReading")
 
+    print("Uploading receipt and odometer photos to /api/documents/upload (if present).")
+    files_to_upload = []
+    if receiptPhoto:
+        files_to_upload.append(("documents", (receiptPhoto.filename, await receiptPhoto.read(), receiptPhoto.content_type)))
+    if odometerPhoto:
+        files_to_upload.append(("documents", (odometerPhoto.filename, await odometerPhoto.read(), odometerPhoto.content_type)))
 
+    uploaded_files_info = None
+    if files_to_upload:
+        try:
+            lube_logger_url = os.environ.get("LUBELOGGER_URL")
+            print(f"Sending POST request to {lube_logger_url}/api/documents/upload with {len(files_to_upload)} file(s).")
+            upload_resp = requests.post(
+                f"{lube_logger_url}/api/documents/upload",
+                files=files_to_upload
+            )
+            upload_resp.raise_for_status()
+            uploaded_files_info = upload_resp.json()
+            print("Files uploaded successfully.")
+        except Exception as e:
+            print(f"Error uploading documents: {e}")
+            raise HTTPException(status_code=502, detail=f"Error uploading documents: {e}")
+    else:
+        print("No files to upload.")
+
+    # Compose notes for POST: brand, address, and placeholder username
+    store_brand = receipt_data.get("storeBrand", "")
+    store_address = receipt_data.get("storeAddress", "")
+    submitting_user = "ExampleUser"  # Placeholder username
+    receipt_datetime = receipt_data.get("datetime", "unknown time and date")
+
+    # Obtener la hora actual en Eastern Time
+    eastern = pytz.timezone("US/Eastern")
+    now_et = datetime.now(eastern)
+    formatted_time = now_et.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    notes_value = f"{store_brand} - {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
+
+    gas_record_payload = {
+        "vehicleId": vehicleId,
+        "date": receipt_data.get("datetime"),
+        "odometer": receipt_data.get("odometerReading"),
+        "fuelConsumed": receipt_data.get("gallonsPurchased"),
+        "cost": receipt_data.get("totalCost"),
+        "isFillToFull": filledToFull.lower() == "true", # TODO fix this to output correctly
+        "missedFuelUp": filledLastTime.lower() == "false", # TODO fix this to output correctly
+        "notes": notes_value,
+        "files": uploaded_files_info  # Now has the
+    }
+
+    print("Sending gas record payload to LubeLogger.")
+    try:
+        lube_logger_url = os.environ.get("LUBELOGGER_URL")
+        resp = requests.post(
+            f"{lube_logger_url}/api/vehicle/gasrecords/add",
+            data=gas_record_payload,
+        )
+        resp.raise_for_status()
+        api_response = resp.json()
+        print("Gas record submitted successfully to LubeLogger.")
+    except Exception as e:
+        print(f"Error sending data to LubeLogger: {e}")
+        raise HTTPException(status_code=502, detail=f"Error sending data to LubeLogger: {e}")
+
+    print("Gas submission process completed successfully.")
     return JSONResponse(content={
         "message": "Form submitted successfully",
-        "receiptData": receipt_data
+        "receiptData": receipt_data,
+        "lubeLoggerResponse": api_response
     })
 
 @app.get("/vehicles")
