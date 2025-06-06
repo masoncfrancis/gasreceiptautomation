@@ -13,6 +13,9 @@ export default function App({ Component, pageProps }: AppProps) {
       clientId={process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID}
       authorizationParams={{
         redirect_uri: process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI || "",
+        useRefreshTokens: true,
+        useRefreshTokensFallback: false,
+        cacheLocation: "localstorage",
       }}
     >
       <Component {...pageProps} />
