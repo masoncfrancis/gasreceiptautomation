@@ -286,6 +286,10 @@ function GasLogForm() {
 
     return (
         <div className="container mx-auto p-6 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 min-h-screen flex items-center justify-center transition-colors duration-300">
+            {/* Temporary Banner */}
+            <div className="fixed top-0 left-0 w-full z-50 bg-yellow-300 text-yellow-900 font-bold text-center py-3 shadow-md">
+                Note: This form only works on the home wifi right now
+            </div>
             <form
                 onSubmit={handleSubmit}
                 className="bg-white dark:bg-gray-700 p-10 rounded-xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-600 transition-colors duration-300"
