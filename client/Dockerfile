@@ -13,6 +13,9 @@ RUN npm ci
 # Copiar código fuente
 COPY . .
 
+# Disable Next.js telemetry
+RUN npx next telemetry disable
+
 ARG NODE_ENV=production
 
 # Construir la aplicación
