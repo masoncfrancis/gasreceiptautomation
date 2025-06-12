@@ -1,0 +1,22 @@
+services:
+  client:
+    image: gasreceiptclient:latest
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8003"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  server:
+    image: gasreceiptserver:latest
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    env_file: ./server/.env
+    
