@@ -143,7 +143,11 @@ function GasLogForm() {
             setVehiclesLoading(true);
             setVehiclesError(null);
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+                let baseUrl = '/api';
+                if (process.env.NEXT_PUBLIC_SERVER_URL) {
+                    console.info('NEXT_PUBLIC_SERVER_URL is set, using it instead of /api');
+                    baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+                }
                 const response = await fetch(`${baseUrl}/vehicles`);
                 if (!response.ok) throw new Error('Failed to fetch vehicles');
                 const data = await response.json();

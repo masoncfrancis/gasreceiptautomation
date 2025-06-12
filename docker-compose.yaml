@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8003:8003"
+    networks:
+      - appNetwork
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003"]
       interval: 30s
@@ -13,10 +15,14 @@ services:
       retries: 5
   server:
     image: gasreceiptserver:latest
+    networks:
+      - appNetwork
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - "8002:8002"
     env_file: ./server/.env
+
+networks:
+  appNetwork:
+    driver: bridge
     
