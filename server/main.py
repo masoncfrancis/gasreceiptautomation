@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Depends, FastAPI  # 👈 new imports
+from fastapi.security import HTTPBearer  # 👈 new imports
 from typing import Optional
 import io
 import os
@@ -21,9 +23,10 @@ lube_logger_url = os.environ.get("LUBELOGGER_URL")
 if not lube_logger_url:
     raise ValueError("[ACTION REQUIRED] LubeLogger server URL environment variable (LUBELOGGER_URL) is not set")
 
+token_auth_scheme = HTTPBearer()
 
 app = FastAPI(
-    title="Gas Log Submission API",
+    title="Gas Receipt Submission API",
     version="1.0.0",
     description="API for submitting gas receipts and odometer readings."
 )
@@ -58,6 +61,7 @@ def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = Fa
 
 @app.post("/submitGas")
 async def submit_gas(
+    token: str = Depends(token_auth_scheme),
     receiptPhoto: UploadFile = File(..., description="Photo of the gas receipt (required)"),
     odometerPhoto: Optional[UploadFile] = File(None, description="Photo of the odometer (required if odometerInputMethod is 'separate_photo')"),
     odometerReading: Optional[str] = Form(None, description="Manual odometer reading (required if odometerInputMethod is 'manual')"),
@@ -167,11 +171,7 @@ async def submit_gas(
     })
 
 @app.get("/vehicles")
-async def get_vehicles():
-    # Get LUBELOGGER_URL from environment
-    lube_logger_url = os.environ.get("LUBELOGGER_URL")
-    if not lube_logger_url:
-        raise HTTPException(status_code=503, detail="LubeLogger server URL not set in environment, cannot access LubeLogger")
+async def get_vehicles(token: str = Depends(token_auth_scheme)):
 
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles")
