@@ -3,6 +3,7 @@
 import React, {useState, useEffect} from 'react';
 import {useAuth0} from '@auth0/auth0-react';
 import LoadingScreen from '@/components/LoadingScreen';
+import {formatManifest} from "next/dist/build/manifests/formatter/format-manifest";
 
 
 function GasLogForm() {
@@ -23,6 +24,7 @@ function GasLogForm() {
 
     // Auth0
     const {user, logout, isAuthenticated, isLoading, getAccessTokenSilently} = useAuth0();
+
 
     const fetchWithAuth = async (input: RequestInfo, init: RequestInit = {}) => {
         const token = await getAccessTokenSilently();
@@ -249,6 +251,7 @@ function GasLogForm() {
         formData.append('odometerInputMethod', odometerInputMethod);
         formData.append('filledToFull', filledToFull);
         formData.append('filledLastTime', filledLastTime);
+        formData.append('userName', user?.name)
 
         let baseUrl = '/api';
         if (process.env.NEXT_PUBLIC_SERVER_URL) {

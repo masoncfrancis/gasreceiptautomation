@@ -72,6 +72,7 @@ async def submit_gas(
     filledToFull: str = Form(..., description="Whether the car was filled to full"),
     filledLastTime: str = Form(..., description="Whether the form was filled last time"),
     vehicleId: str = Form(..., description="Id of Vehicle"),
+    userName: str = Form(..., description="Name of User (for notes)"),
 ):
     print("Starting gas submission process.")
 
@@ -120,6 +121,7 @@ async def submit_gas(
             )
             upload_resp.raise_for_status()
             uploaded_files_info = upload_resp.json()
+            print(uploaded_files_info)
             print("Files uploaded successfully.")
         except Exception as e:
             print(f"Error uploading documents: {e}")
@@ -130,7 +132,7 @@ async def submit_gas(
     # Compose notes for POST: brand, address, and placeholder username
     store_brand = receipt_data.get("storeBrand", "")
     store_address = receipt_data.get("storeAddress", "")
-    submitting_user = "ExampleUser"  # Placeholder username
+    submitting_user = userName
     receipt_datetime = receipt_data.get("datetime", "unknown time and date")
 
     # Obtener la hora actual en Eastern Time
@@ -138,7 +140,7 @@ async def submit_gas(
     now_et = datetime.now(eastern)
     formatted_time = now_et.strftime("%Y-%m-%d %H:%M:%S %Z")
 
-    notes_value = f"{store_brand} - {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
+    notes_value = f"Brand: {store_brand}\nAddress: {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
 
     gas_record_payload = {
         "vehicleId": vehicleId,
@@ -149,7 +151,7 @@ async def submit_gas(
         "isFillToFull": filledToFull.lower() == "true", # TODO fix this to output correctly
         "missedFuelUp": filledLastTime.lower() == "false", # TODO fix this to output correctly
         "notes": notes_value,
-        "files": uploaded_files_info  # Now has the
+        "files": uploaded_files_info
     }
 
     print("Sending gas record payload to LubeLogger.")
