@@ -1,9 +1,12 @@
 from google import genai
 from PIL import Image
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from datetime import datetime
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Security
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Depends, FastAPI  # 👈 new imports
+from fastapi.security import HTTPBearer  # 👈 new imports
 from typing import Optional
 import io
 import os
@@ -12,7 +15,8 @@ import requests
 import proc
 import uvicorn
 import pytz
-from datetime import datetime
+
+from authutils import VerifyToken
 
 load_dotenv()
 
@@ -21,12 +25,14 @@ lube_logger_url = os.environ.get("LUBELOGGER_URL")
 if not lube_logger_url:
     raise ValueError("[ACTION REQUIRED] LubeLogger server URL environment variable (LUBELOGGER_URL) is not set")
 
+token_auth_scheme = HTTPBearer()
 
 app = FastAPI(
-    title="Gas Log Submission API",
+    title="Gas Receipt Submission API",
     version="1.0.0",
     description="API for submitting gas receipts and odometer readings."
 )
+auth = VerifyToken()
 
 # Allow CORS for local development (adjust origins as needed)
 app.add_middleware(
@@ -58,6 +64,7 @@ def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = Fa
 
 @app.post("/submitGas")
 async def submit_gas(
+    auth_result: str = Security(auth.verify),
     receiptPhoto: UploadFile = File(..., description="Photo of the gas receipt (required)"),
     odometerPhoto: Optional[UploadFile] = File(None, description="Photo of the odometer (required if odometerInputMethod is 'separate_photo')"),
     odometerReading: Optional[str] = Form(None, description="Manual odometer reading (required if odometerInputMethod is 'manual')"),
@@ -65,6 +72,7 @@ async def submit_gas(
     filledToFull: str = Form(..., description="Whether the car was filled to full"),
     filledLastTime: str = Form(..., description="Whether the form was filled last time"),
     vehicleId: str = Form(..., description="Id of Vehicle"),
+    userName: str = Form(..., description="Name of User (for notes)"),
 ):
     print("Starting gas submission process.")
 
@@ -113,6 +121,7 @@ async def submit_gas(
             )
             upload_resp.raise_for_status()
             uploaded_files_info = upload_resp.json()
+            print(uploaded_files_info)
             print("Files uploaded successfully.")
         except Exception as e:
             print(f"Error uploading documents: {e}")
@@ -123,7 +132,7 @@ async def submit_gas(
     # Compose notes for POST: brand, address, and placeholder username
     store_brand = receipt_data.get("storeBrand", "")
     store_address = receipt_data.get("storeAddress", "")
-    submitting_user = "ExampleUser"  # Placeholder username
+    submitting_user = userName
     receipt_datetime = receipt_data.get("datetime", "unknown time and date")
 
     # Obtener la hora actual en Eastern Time
@@ -131,7 +140,7 @@ async def submit_gas(
     now_et = datetime.now(eastern)
     formatted_time = now_et.strftime("%Y-%m-%d %H:%M:%S %Z")
 
-    notes_value = f"{store_brand} - {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
+    notes_value = f"Brand: {store_brand}\nAddress: {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
 
     gas_record_payload = {
         "vehicleId": vehicleId,
@@ -142,7 +151,7 @@ async def submit_gas(
         "isFillToFull": filledToFull.lower() == "true", # TODO fix this to output correctly
         "missedFuelUp": filledLastTime.lower() == "false", # TODO fix this to output correctly
         "notes": notes_value,
-        "files": uploaded_files_info  # Now has the
+        "files": uploaded_files_info
     }
 
     print("Sending gas record payload to LubeLogger.")
@@ -167,11 +176,7 @@ async def submit_gas(
     })
 
 @app.get("/vehicles")
-async def get_vehicles():
-    # Get LUBELOGGER_URL from environment
-    lube_logger_url = os.environ.get("LUBELOGGER_URL")
-    if not lube_logger_url:
-        raise HTTPException(status_code=503, detail="LubeLogger server URL not set in environment, cannot access LubeLogger")
+async def get_vehicles(auth_result: str = Security(auth.verify)):
 
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles")
@@ -208,11 +213,16 @@ async def health_check():
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles", timeout=5)
         if resp.status_code == 200:
-            return JSONResponse(content={"status": "ok"}, status_code=200)
+            return JSONResponse(content={"status": "OK"}, status_code=200)
         else:
             return JSONResponse(content={"error": f"LubeLogger returned status {resp.status_code}"}, status_code=502)
     except Exception as e:
         return JSONResponse(content={"error": f"Failed to reach LubeLogger: {e}"}, status_code=502)
+
+@app.get("/authTest")
+def authTest(auth_result: str = Security(auth.verify)): # 👈 Use Security and the verify method to protect your endpoints
+    """A valid access token is required to access this route"""
+    return auth_result
 
 
 if __name__ == "__main__":

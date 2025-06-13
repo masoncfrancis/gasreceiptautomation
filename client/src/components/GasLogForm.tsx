@@ -1,8 +1,9 @@
 'use client';
 
 import React, {useState, useEffect} from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import {useAuth0} from '@auth0/auth0-react';
 import LoadingScreen from '@/components/LoadingScreen';
+import {formatManifest} from "next/dist/build/manifests/formatter/format-manifest";
 
 
 function GasLogForm() {
@@ -22,7 +23,15 @@ function GasLogForm() {
     const [theme, setTheme] = useState<string>('light');
 
     // Auth0
-    const { user, logout, isAuthenticated, isLoading } = useAuth0();
+    const {user, logout, isAuthenticated, isLoading, getAccessTokenSilently} = useAuth0();
+
+
+    const fetchWithAuth = async (input: RequestInfo, init: RequestInit = {}) => {
+        const token = await getAccessTokenSilently();
+        const headers = new Headers(init.headers || {});
+        headers.set('Authorization', `Bearer ${token}`);
+        return fetch(input, {...init, headers});
+    };
 
     // Vehicle selection state
     const [vehicles, setVehicles] = useState<{ id: string, vehicleId: number, name: string }[]>([]);
@@ -131,7 +140,7 @@ function GasLogForm() {
     const handleVehicleButtonClick = (vehicleId: number) => {
         setSelectedVehicle(vehicleId);
         setValidationErrors(prev => {
-            const newErrors = { ...prev };
+            const newErrors = {...prev};
             delete newErrors['selectedVehicle'];
             return newErrors;
         });
@@ -148,7 +157,7 @@ function GasLogForm() {
                     console.info('NEXT_PUBLIC_SERVER_URL is set, using it instead of /api');
                     baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
                 }
-                const response = await fetch(`${baseUrl}/vehicles`);
+                const response = await fetchWithAuth(`${baseUrl}/vehicles`);
                 if (!response.ok) throw new Error('Failed to fetch vehicles');
                 const data = await response.json();
                 if (Array.isArray(data.vehicles)) {
@@ -242,6 +251,7 @@ function GasLogForm() {
         formData.append('odometerInputMethod', odometerInputMethod);
         formData.append('filledToFull', filledToFull);
         formData.append('filledLastTime', filledLastTime);
+        formData.append('userName', user?.name)
 
         let baseUrl = '/api';
         if (process.env.NEXT_PUBLIC_SERVER_URL) {
@@ -251,7 +261,7 @@ function GasLogForm() {
         const apiEndpoint = `${baseUrl}/submitGas`;
 
         try {
-            const response = await fetch(apiEndpoint, {
+            const response = await fetchWithAuth(apiEndpoint, {
                 method: 'POST',
                 body: formData,
             });
@@ -283,17 +293,18 @@ function GasLogForm() {
     };
 
     // Error display component
-    const ErrorMessage = ({ message }: { message: string }) => (
+    const ErrorMessage = ({message}: { message: string }) => (
         <p className="text-red-500 text-sm mt-1">{message}</p>
     );
 
     // Show loading screen while vehicles are loading
     if (vehiclesLoading) {
-        return <LoadingScreen />;
+        return <LoadingScreen/>;
     }
 
     return (
-        <div className="container mx-auto p-6 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 min-h-screen flex items-center justify-center transition-colors duration-300">
+        <div
+            className="container mx-auto p-6 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 min-h-screen flex items-center justify-center transition-colors duration-300">
             <form
                 onSubmit={handleSubmit}
                 className="bg-white dark:bg-gray-700 p-10 rounded-xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-600 transition-colors duration-300"
@@ -302,12 +313,13 @@ function GasLogForm() {
                 {isAuthenticated && user && (
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center space-x-2 justify-end w-full">
-                            <span className="px-3 py-1 rounded-lg border-1 font-semibold text-sm transition-colors duration-300">
+                            <span
+                                className="px-3 py-1 rounded-lg border-1 font-semibold text-sm transition-colors duration-300">
                                 {user.name}
                             </span>
                             <button
                                 type="button"
-                                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                                onClick={() => logout({logoutParams: {returnTo: window.location.origin}})}
                                 className="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400"
                             >
                                 Log Out
@@ -323,7 +335,8 @@ function GasLogForm() {
 
                 {/* Vehicle Selection - Always below title */}
                 <div className="mb-7">
-                    <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
+                    <label
+                        className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
                         Select your vehicle: <span className="text-red-500">*</span>
                     </label>
                     {vehiclesError ? (
@@ -337,8 +350,8 @@ function GasLogForm() {
                                     onClick={() => handleVehicleButtonClick(vehicle.vehicleId)}
                                     className={`w-full px-4 py-3 rounded-lg border-2 font-semibold text-center transition-colors duration-300
                                         ${selectedVehicle === vehicle.vehicleId
-                                            ? 'bg-blue-600 text-white border-blue-700 shadow-lg'
-                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500'}
+                                        ? 'bg-blue-600 text-white border-blue-700 shadow-lg'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500'}
                                         ${validationErrors.selectedVehicle ? 'border-red-500' : ''}
                                     `}
                                     aria-pressed={selectedVehicle === vehicle.vehicleId}
@@ -348,7 +361,7 @@ function GasLogForm() {
                             ))}
                         </div>
                     )}
-                    {validationErrors.selectedVehicle && <ErrorMessage message={validationErrors.selectedVehicle} />}
+                    {validationErrors.selectedVehicle && <ErrorMessage message={validationErrors.selectedVehicle}/>}
                 </div>
 
                 {/* Hide rest of form until vehicle is selected */}
@@ -362,7 +375,8 @@ function GasLogForm() {
                         <div className="mb-7">
                             <label
                                 className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
-                                <span className="inline-block mr-2 align-middle">📸</span> Take a photo of your gas receipt: <span className="text-red-500">*</span>
+                                <span className="inline-block mr-2 align-middle">📸</span> Take a photo of your gas
+                                receipt: <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                                 <label htmlFor="receiptPhoto"
@@ -379,7 +393,7 @@ function GasLogForm() {
                                     required
                                 />
                             </div>
-                            {validationErrors.receiptPhoto && <ErrorMessage message={validationErrors.receiptPhoto} />}
+                            {validationErrors.receiptPhoto && <ErrorMessage message={validationErrors.receiptPhoto}/>}
                             {receiptPhoto && (
                                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic transition-colors duration-300">
                                     Selected file: {receiptPhoto.name}
@@ -391,7 +405,8 @@ function GasLogForm() {
                         <div className="mb-7">
                             <label
                                 className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-3 transition-colors duration-300">
-                                How would you like to enter the odometer reading? <span className="text-red-500">*</span>
+                                How would you like to enter the odometer reading? <span
+                                className="text-red-500">*</span>
                             </label>
                             <div className="flex flex-wrap justify-center gap-4">
                                 <div
@@ -422,19 +437,21 @@ function GasLogForm() {
                                     <span className="text-2xl mb-1">⌨️</span> I'll Type It
                                 </div>
                             </div>
-                            {validationErrors.odometerInputMethod && <ErrorMessage message={validationErrors.odometerInputMethod} />}
+                            {validationErrors.odometerInputMethod &&
+                                <ErrorMessage message={validationErrors.odometerInputMethod}/>}
                         </div>
 
                         {/* Conditionally Render Odometer Input */}
                         {odometerInputMethod === 'separate_photo' && (
                             <div className="mb-7">
                                 <label
-                                       className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
-                                    <span className="inline-block mr-2 align-middle">📸</span> Take a photo of your odometer: <span className="text-red-500">*</span>
+                                    className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
+                                    <span className="inline-block mr-2 align-middle">📸</span> Take a photo of your
+                                    odometer: <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <label htmlFor="odometerPhoto"
-                                          className={`flex items-center justify-center w-full py-3 px-4 bg-blue-50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 font-medium rounded-lg border-2 ${validationErrors.odometerPhoto ? 'border-red-500' : 'border-blue-200 dark:border-gray-700'} cursor-pointer transition-colors duration-300`}>
+                                           className={`flex items-center justify-center w-full py-3 px-4 bg-blue-50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 font-medium rounded-lg border-2 ${validationErrors.odometerPhoto ? 'border-red-500' : 'border-blue-200 dark:border-gray-700'} cursor-pointer transition-colors duration-300`}>
                                         <span className="mr-2">📸</span> Take/Upload a photo
                                     </label>
                                     <input
@@ -447,7 +464,8 @@ function GasLogForm() {
                                         required={odometerInputMethod === 'separate_photo'}
                                     />
                                 </div>
-                                {validationErrors.odometerPhoto && <ErrorMessage message={validationErrors.odometerPhoto} />}
+                                {validationErrors.odometerPhoto &&
+                                    <ErrorMessage message={validationErrors.odometerPhoto}/>}
                                 {odometerPhoto && (
                                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic transition-colors duration-300">
                                         Selected file: {odometerPhoto.name}
@@ -460,7 +478,8 @@ function GasLogForm() {
                             <div className="mb-7">
                                 <label htmlFor="odometerReading"
                                        className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
-                                    <span className="inline-block mr-2 align-middle">🔢</span> Enter odometer reading: <span className="text-red-500">*</span>
+                                    <span className="inline-block mr-2 align-middle">🔢</span> Enter odometer
+                                    reading: <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="number"
@@ -471,7 +490,8 @@ function GasLogForm() {
                                     placeholder="e.g., 123456"
                                     required={odometerInputMethod === 'manual'}
                                 />
-                                {validationErrors.odometerReading && <ErrorMessage message={validationErrors.odometerReading} />}
+                                {validationErrors.odometerReading &&
+                                    <ErrorMessage message={validationErrors.odometerReading}/>}
                             </div>
                         )}
 
@@ -508,14 +528,15 @@ function GasLogForm() {
                                     <span className="text-3xl mb-1">👎</span> No
                                 </div>
                             </div>
-                            {validationErrors.filledToFull && <ErrorMessage message={validationErrors.filledToFull} />}
+                            {validationErrors.filledToFull && <ErrorMessage message={validationErrors.filledToFull}/>}
                         </div>
 
                         {/* Filled Last Time Question */}
                         <div className="mb-7">
                             <label
                                 className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
-                                Did you remember to fill this form out last time? <span className="text-red-500">*</span>
+                                Did you remember to fill this form out last time? <span
+                                className="text-red-500">*</span>
                             </label>
                             <p className="mb-3 text-left text-sm text-gray-600 dark:text-gray-400 italic transition-colors duration-300">
                                 It's okay if you didn't. Just let us know so we know how to track gas mileage.
@@ -540,7 +561,8 @@ function GasLogForm() {
                                     <span className="text-3xl mb-1">❌</span> No
                                 </div>
                             </div>
-                            {validationErrors.filledLastTime && <ErrorMessage message={validationErrors.filledLastTime} />}
+                            {validationErrors.filledLastTime &&
+                                <ErrorMessage message={validationErrors.filledLastTime}/>}
                         </div>
 
                         {/* Required fields note */}
