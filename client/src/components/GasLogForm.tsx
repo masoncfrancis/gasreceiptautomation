@@ -243,7 +243,11 @@ function GasLogForm() {
         formData.append('filledToFull', filledToFull);
         formData.append('filledLastTime', filledLastTime);
 
-        const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+        let baseUrl = '/api';
+        if (process.env.NEXT_PUBLIC_SERVER_URL) {
+            console.info('NEXT_PUBLIC_SERVER_URL is set, using it instead of /api');
+            baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+        }
         const apiEndpoint = `${baseUrl}/submitGas`;
 
         try {
