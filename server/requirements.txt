@@ -1,4 +1,4 @@
-google-genai==1.17.*
+google-genai==1.*
 pillow==11.2.*
 pillow-heif==0.22.*
 fastapi[standard]==0.115.*
