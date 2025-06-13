@@ -16,7 +16,7 @@ import proc
 import uvicorn
 import pytz
 
-from .authutils import VerifyToken
+from authutils import VerifyToken
 
 load_dotenv()
 
@@ -216,6 +216,11 @@ async def health_check():
             return JSONResponse(content={"error": f"LubeLogger returned status {resp.status_code}"}, status_code=502)
     except Exception as e:
         return JSONResponse(content={"error": f"Failed to reach LubeLogger: {e}"}, status_code=502)
+
+@app.get("/authTest")
+def authTest(auth_result: str = Security(auth.verify)): # 👈 Use Security and the verify method to protect your endpoints
+    """A valid access token is required to access this route"""
+    return auth_result
 
 
 if __name__ == "__main__":

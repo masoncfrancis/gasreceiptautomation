@@ -4,7 +4,7 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import SecurityScopes, HTTPAuthorizationCredentials, HTTPBearer
 
-from .authconfig import get_settings
+from authconfig import get_settings
 
 
 class UnauthorizedException(HTTPException):
@@ -56,6 +56,6 @@ class VerifyToken:
             )
         except Exception as error:
             raise UnauthorizedException(str(error))
-    
+
         return payload
         # 👆 new code
