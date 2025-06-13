@@ -1,7 +1,8 @@
 from google import genai
 from PIL import Image
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from datetime import datetime
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Security
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Depends, FastAPI  # 👈 new imports
@@ -14,7 +15,8 @@ import requests
 import proc
 import uvicorn
 import pytz
-from datetime import datetime
+
+from .authutils import VerifyToken
 
 load_dotenv()
 
@@ -30,6 +32,7 @@ app = FastAPI(
     version="1.0.0",
     description="API for submitting gas receipts and odometer readings."
 )
+auth = VerifyToken()
 
 # Allow CORS for local development (adjust origins as needed)
 app.add_middleware(
@@ -61,7 +64,7 @@ def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = Fa
 
 @app.post("/submitGas")
 async def submit_gas(
-    token: str = Depends(token_auth_scheme),
+    auth_result: str = Security(auth.verify),
     receiptPhoto: UploadFile = File(..., description="Photo of the gas receipt (required)"),
     odometerPhoto: Optional[UploadFile] = File(None, description="Photo of the odometer (required if odometerInputMethod is 'separate_photo')"),
     odometerReading: Optional[str] = Form(None, description="Manual odometer reading (required if odometerInputMethod is 'manual')"),
@@ -171,7 +174,7 @@ async def submit_gas(
     })
 
 @app.get("/vehicles")
-async def get_vehicles(token: str = Depends(token_auth_scheme)):
+async def get_vehicles(auth_result: str = Security(auth.verify)):
 
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles")
@@ -208,7 +211,7 @@ async def health_check():
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles", timeout=5)
         if resp.status_code == 200:
-            return JSONResponse(content={"status": "ok"}, status_code=200)
+            return JSONResponse(content={"status": "OK"}, status_code=200)
         else:
             return JSONResponse(content={"error": f"LubeLogger returned status {resp.status_code}"}, status_code=502)
     except Exception as e:
