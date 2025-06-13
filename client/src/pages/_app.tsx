@@ -16,6 +16,7 @@ export default function App({ Component, pageProps }: AppProps) {
         useRefreshTokens: true,
         useRefreshTokensFallback: false,
         cacheLocation: "localstorage",
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || "",
       }}
     >
       <Component {...pageProps} />

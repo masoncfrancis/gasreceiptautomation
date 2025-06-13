@@ -1,9 +1,12 @@
 from google import genai
 from PIL import Image
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from datetime import datetime
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Security
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Depends, FastAPI  # 👈 new imports
+from fastapi.security import HTTPBearer  # 👈 new imports
 from typing import Optional
 import io
 import os
@@ -12,7 +15,8 @@ import requests
 import proc
 import uvicorn
 import pytz
-from datetime import datetime
+
+from authutils import VerifyToken
 
 load_dotenv()
 
@@ -21,12 +25,14 @@ lube_logger_url = os.environ.get("LUBELOGGER_URL")
 if not lube_logger_url:
     raise ValueError("[ACTION REQUIRED] LubeLogger server URL environment variable (LUBELOGGER_URL) is not set")
 
+token_auth_scheme = HTTPBearer()
 
 app = FastAPI(
-    title="Gas Log Submission API",
+    title="Gas Receipt Submission API",
     version="1.0.0",
     description="API for submitting gas receipts and odometer readings."
 )
+auth = VerifyToken()
 
 # Allow CORS for local development (adjust origins as needed)
 app.add_middleware(
@@ -58,6 +64,7 @@ def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = Fa
 
 @app.post("/submitGas")
 async def submit_gas(
+    auth_result: str = Security(auth.verify),
     receiptPhoto: UploadFile = File(..., description="Photo of the gas receipt (required)"),
     odometerPhoto: Optional[UploadFile] = File(None, description="Photo of the odometer (required if odometerInputMethod is 'separate_photo')"),
     odometerReading: Optional[str] = Form(None, description="Manual odometer reading (required if odometerInputMethod is 'manual')"),
@@ -167,11 +174,7 @@ async def submit_gas(
     })
 
 @app.get("/vehicles")
-async def get_vehicles():
-    # Get LUBELOGGER_URL from environment
-    lube_logger_url = os.environ.get("LUBELOGGER_URL")
-    if not lube_logger_url:
-        raise HTTPException(status_code=503, detail="LubeLogger server URL not set in environment, cannot access LubeLogger")
+async def get_vehicles(auth_result: str = Security(auth.verify)):
 
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles")
@@ -208,11 +211,16 @@ async def health_check():
     try:
         resp = requests.get(f"{lube_logger_url}/api/vehicles", timeout=5)
         if resp.status_code == 200:
-            return JSONResponse(content={"status": "ok"}, status_code=200)
+            return JSONResponse(content={"status": "OK"}, status_code=200)
         else:
             return JSONResponse(content={"error": f"LubeLogger returned status {resp.status_code}"}, status_code=502)
     except Exception as e:
         return JSONResponse(content={"error": f"Failed to reach LubeLogger: {e}"}, status_code=502)
+
+@app.get("/authTest")
+def authTest(auth_result: str = Security(auth.verify)): # 👈 Use Security and the verify method to protect your endpoints
+    """A valid access token is required to access this route"""
+    return auth_result
 
 
 if __name__ == "__main__":
