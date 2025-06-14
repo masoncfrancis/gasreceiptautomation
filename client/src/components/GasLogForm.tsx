@@ -251,7 +251,8 @@ function GasLogForm() {
         formData.append('odometerInputMethod', odometerInputMethod);
         formData.append('filledToFull', filledToFull);
         formData.append('filledLastTime', filledLastTime);
-        formData.append('userName', user?.name)
+        const userName = user?.name || ''; 
+        formData.append('userName', userName)
 
         let baseUrl = '/api';
         if (process.env.NEXT_PUBLIC_SERVER_URL) {
