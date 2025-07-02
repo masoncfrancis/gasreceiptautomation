@@ -334,15 +334,30 @@ function GasLogForm() {
                     Gas and Mileage Submission
                 </h2>
 
+                {/* Global messages (success, vehicle fetch error) */}
+                {(submissionStatus === 'success' || vehiclesError) && (
+                    <div className="w-full max-w-lg mb-6 mx-auto">
+                        {submissionStatus === 'success' && (
+                            <p className="text-center text-green-600 dark:text-green-400 font-semibold transition-colors duration-300 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg py-3 px-4 mb-2">
+                                Receipt submitted successfully!
+                            </p>
+                        )}
+                        {vehiclesError && (
+                            <p className="text-center text-red-600 dark:text-red-400 font-semibold transition-colors duration-300 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg py-3 px-4 mb-2">
+                                {vehiclesError}
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 {/* Vehicle Selection - Always below title */}
                 <div className="mb-7">
                     <label
                         className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2 transition-colors duration-300">
                         Select your vehicle: <span className="text-red-500">*</span>
                     </label>
-                    {vehiclesError ? (
-                        <p className="text-red-500">{vehiclesError}</p>
-                    ) : (
+                    {/* Vehicle error moved above form, so not shown here */}
+                    {!vehiclesError ? (
                         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                             {vehicles.map(vehicle => (
                                 <button
@@ -361,8 +376,8 @@ function GasLogForm() {
                                 </button>
                             ))}
                         </div>
-                    )}
-                    {validationErrors.selectedVehicle && <ErrorMessage message={validationErrors.selectedVehicle}/>}
+                    ) : null}
+                    {validationErrors.selectedVehicle && <ErrorMessage message={validationErrors.selectedVehicle}/>} 
                 </div>
 
                 {/* Hide rest of form until vehicle is selected */}
@@ -572,7 +587,7 @@ function GasLogForm() {
                         </div>
 
                         {/* Submit Button */}
-                        <div className="flex items-center justify-center mt-8">
+                        <div className="flex items-center justify-center mt-8 flex-col gap-2">
                             <button
                                 type="submit"
                                 className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 shadow-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -580,17 +595,11 @@ function GasLogForm() {
                             >
                                 {isSubmitting ? 'Submitting...' : 'Submit'}
                             </button>
+                            {/* Submission error (backend) shown near button */}
+                            {submissionStatus === 'error' && (
+                                <p className="mt-2 text-center text-red-600 dark:text-red-400 font-semibold transition-colors duration-300">Error submitting form. Please try again.</p>
+                            )}
                         </div>
-
-                        {/* Submission Status Message */}
-                        {submissionStatus === 'success' && (
-                            <p className="mt-4 text-center text-green-600 dark:text-green-400 font-semibold transition-colors duration-300">Form
-                                submitted successfully!</p>
-                        )}
-                        {submissionStatus === 'error' && (
-                            <p className="mt-4 text-center text-red-600 dark:text-red-400 font-semibold transition-colors duration-300">Error
-                                submitting form. Please try again.</p>
-                        )}
                     </>
                 )}
             </form>
