@@ -176,6 +176,7 @@ async def submit_gas(
         print("Gas record submitted successfully to LubeLogger.")
     except Exception as e:
         print(f"Error sending data to LubeLogger: {e}")
+        print("Request payload:", json.dumps(gas_record_payload, indent=2))
         raise HTTPException(status_code=502, detail=f"Error sending data to LubeLogger: {e}")
 
     print("Gas submission process completed successfully.")
