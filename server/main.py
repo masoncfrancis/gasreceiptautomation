@@ -87,6 +87,13 @@ async def submit_gas(
     print("Extracting data from receipt photo using AI.")
     receipt_data = sendDataToAI(receiptPhoto, odometerInputMethod)
 
+    # Check to make sure date is present
+    dateIncluded = True
+    if receipt_data.get("datetime") is None:
+        print("No date found in receipt data, setting datetime to current time.")
+        receipt_data["datetime"] = datetime.now().strftime("%m/%d/%Y %H:%M")
+        dateIncluded = False
+
     odometer_data = { "odometerReading": 999999 }
 
     if odometerInputMethod == "separate_photo":
@@ -141,6 +148,9 @@ async def submit_gas(
     formatted_time = now_et.strftime("%Y-%m-%d %H:%M:%S %Z")
 
     notes_value = f"Brand: {store_brand}\nAddress: {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
+
+    if not dateIncluded:
+        notes_value += "\n\nNote: The date was not found on the receipt, so the current time was used instead."
 
     gas_record_payload = {
         "vehicleId": vehicleId,

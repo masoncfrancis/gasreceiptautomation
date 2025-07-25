@@ -119,7 +119,7 @@ def getReceiptPromptInfo():
         ]
     }
 
-    receiptDataPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt."
+    receiptDataPrompt = "Obtain the total cost, gallons purchased, date and time (with time rounded to the whole minute), store brand, and store address from this receipt. If any value is unknown or unavailable, set it's corresponding value in the response to null."
 
     return receiptDataPrompt, receiptDataSchema
 
