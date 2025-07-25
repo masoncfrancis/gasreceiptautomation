@@ -403,7 +403,6 @@ function GasLogForm() {
                                     type="file"
                                     id="receiptPhoto"
                                     accept="image/*"
-                                    capture={"camera" as "user" | "environment"}
                                     onChange={(e) => handleFileChange(e, setReceiptPhoto)}
                                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                                     required
@@ -474,7 +473,6 @@ function GasLogForm() {
                                         type="file"
                                         id="odometerPhoto"
                                         accept="image/*"
-                                        capture={"camera" as "user" | "environment"}
                                         onChange={(e) => handleFileChange(e, setOdometerPhoto)}
                                         className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                                         required={odometerInputMethod === 'separate_photo'}
