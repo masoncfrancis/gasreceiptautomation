@@ -149,12 +149,14 @@ async def submit_gas(
 
     notes_value = f"Brand: {store_brand}\nAddress: {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
 
+    dateTime = receipt_data.get("datetime")
     if not dateIncluded:
         notes_value += "\n\nNote: The date was not found on the receipt, so the current time was used instead."
+        dateTime = formatted_time
 
     gas_record_payload = {
         "vehicleId": vehicleId,
-        "date": receipt_data.get("datetime"),
+        "date": dateTime,
         "odometer": receipt_data.get("odometerReading"),
         "fuelConsumed": receipt_data.get("gallonsPurchased"),
         "cost": receipt_data.get("totalCost"),
