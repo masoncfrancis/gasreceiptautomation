@@ -127,7 +127,11 @@ async def submit_gas(
                 files=files_to_upload
             )
             upload_resp.raise_for_status()
+            # Keep both the parsed JSON and the raw text exactly as returned
+            # by the documents endpoint. Some downstream APIs expect the raw
+            # JSON string in the 'files' form field, so preserve it.
             uploaded_files_info = upload_resp.json()
+            uploaded_files_text = upload_resp.text
             print(uploaded_files_info)
             print("Files uploaded successfully.")
         except Exception as e:
@@ -154,31 +158,48 @@ async def submit_gas(
         notes_value += "\n\nNote: The date was not found on the receipt, so the current time was used instead."
         dateTime = formatted_time
 
+    # Build JSON payload. LubeLogger expects a JSON body for the gas record
+    # submission and an array under the 'files' key. Use the parsed JSON array
+    # returned by the upload endpoint when available; otherwise send an empty
+    # list.
+    # Build JSON payload. LubeLogger expects a JSON body for the gas record
+    # submission and an array under the 'files' key. vehicleId will be sent
+    # as a query parameter (per new requirement) rather than in the body.
     gas_record_payload = {
-        "vehicleId": vehicleId,
         "date": dateTime,
         "odometer": receipt_data.get("odometerReading"),
         "fuelConsumed": receipt_data.get("gallonsPurchased"),
         "cost": receipt_data.get("totalCost"),
-        "isFillToFull": filledToFull.lower() == "true", # TODO fix this to output correctly
-        "missedFuelUp": filledLastTime.lower() == "false", # TODO fix this to output correctly
+        "isFillToFull": True if filledToFull.lower() == "true" else False,
+        "missedFuelUp": True if filledLastTime.lower() == "false" else False,
         "notes": notes_value,
-        "files": uploaded_files_info
+        "files": uploaded_files_info if uploaded_files_info is not None else []
     }
 
-    print("Sending gas record payload to LubeLogger.")
+    print("Sending gas record payload to LubeLogger (application/json).")
     try:
         lube_logger_url = os.environ.get("LUBELOGGER_URL")
+        # Send vehicleId as a query parameter and the rest as JSON in the
+        # request body.
         resp = requests.post(
             f"{lube_logger_url}/api/vehicle/gasrecords/add",
-            data=gas_record_payload,
+            params={"vehicleId": vehicleId},
+            json=gas_record_payload,
+            timeout=30,
         )
         resp.raise_for_status()
         api_response = resp.json()
         print("Gas record submitted successfully to LubeLogger.")
     except Exception as e:
         print(f"Error sending data to LubeLogger: {e}")
-        print("Request payload:", json.dumps(gas_record_payload, indent=2))
+        # Print payload for debugging (truncate large 'files' arrays)
+        debug_payload = dict(gas_record_payload)
+        try:
+            if isinstance(debug_payload.get("files"), list):
+                debug_payload["files"] = debug_payload["files"][:10]
+        except Exception:
+            pass
+        print("Request payload (partial):", json.dumps(debug_payload, default=str, indent=2))
         raise HTTPException(status_code=502, detail=f"Error sending data to LubeLogger: {e}")
 
     print("Gas submission process completed successfully.")
