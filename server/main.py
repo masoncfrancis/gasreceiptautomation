@@ -161,22 +161,40 @@ async def submit_gas(
     # Build JSON payload. LubeLogger expects a JSON body for the gas record
     # submission and an array under the 'files' key. Use the parsed JSON array
     # returned by the upload endpoint when available; otherwise send an empty
-    # list.
-    # Build JSON payload. LubeLogger expects a JSON body for the gas record
-    # submission and an array under the 'files' key. vehicleId will be sent
-    # as a query parameter (per new requirement) rather than in the body.
+    # list. For the boolean inputs we only consider 'yes' and 'no' (case-insen-
+    # sitive). Anything else defaults to False.
+    def parse_yes_no(v):
+        if v is None:
+            return False
+        s = str(v).strip().lower()
+        if s == 'yes':
+            return True
+        if s == 'no':
+            return False
+        return False
+
+    parsed_filledToFull = parse_yes_no(filledToFull)
+    parsed_filledLastTime = parse_yes_no(filledLastTime)
+
     gas_record_payload = {
         "date": dateTime,
         "odometer": receipt_data.get("odometerReading"),
         "fuelConsumed": receipt_data.get("gallonsPurchased"),
         "cost": receipt_data.get("totalCost"),
-        "isFillToFull": True if filledToFull.lower() == "true" else False,
-        "missedFuelUp": True if filledLastTime.lower() == "false" else False,
+        # isFillToFull: true when the user input for filledToFull was 'yes'
+        "isFillToFull": parsed_filledToFull,
+        # missedFuelUp: true when the user input for filledLastTime was 'no'
+        "missedFuelUp": (not parsed_filledLastTime),
         "notes": notes_value,
         "files": uploaded_files_info if uploaded_files_info is not None else []
     }
 
     print("Sending gas record payload to LubeLogger (application/json).")
+    # Debug: print the exact JSON payload so we can verify booleans are true/false
+    try:
+        print("Outgoing gas record payload:", json.dumps(gas_record_payload, default=str))
+    except Exception:
+        print("Outgoing gas record payload (could not JSON serialize) - showing repr:", repr(gas_record_payload))
     try:
         lube_logger_url = os.environ.get("LUBELOGGER_URL")
         # Send vehicleId as a query parameter and the rest as JSON in the
