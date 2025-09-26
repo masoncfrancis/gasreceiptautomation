@@ -358,7 +358,10 @@ function GasLogForm() {
                     </label>
                     {/* Vehicle error moved above form, so not shown here */}
                     {!vehiclesError ? (
-                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                        <div
+                            className="grid gap-4 justify-center"
+                            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}
+                        >
                             {vehicles.map(vehicle => (
                                 <button
                                     key={vehicle.id}
