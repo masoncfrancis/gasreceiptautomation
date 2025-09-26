@@ -358,13 +358,13 @@ function GasLogForm() {
                     </label>
                     {/* Vehicle error moved above form, so not shown here */}
                     {!vehiclesError ? (
-                        <div className="flex flex-wrap justify-center gap-4">
+                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                             {vehicles.map(vehicle => (
                                 <button
                                     key={vehicle.id}
                                     type="button"
                                     onClick={() => handleVehicleButtonClick(vehicle.vehicleId)}
-                                    className={`flex-1 min-w-[140px] px-4 py-3 rounded-lg border-2 font-semibold flex items-center justify-center text-center transition-colors duration-300
+                                    className={`w-full px-4 py-3 rounded-lg border-2 font-semibold text-center transition-colors duration-300
                                         ${selectedVehicle === vehicle.vehicleId
                                         ? 'bg-blue-600 text-white border-blue-700 shadow-lg'
                                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500'}
