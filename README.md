@@ -323,8 +323,13 @@ See `client/.env.example` for a complete template.
 
 The backend FastAPI server provides interactive API documentation:
 
+**Local Development:**
 - **Swagger UI:** http://localhost:8002/docs
 - **ReDoc:** http://localhost:8002/redoc
+
+**Docker Deployment:**
+- **Swagger UI:** http://localhost:8003/api/docs
+- **ReDoc:** http://localhost:8003/api/redoc
 
 ### Key Endpoints
 
