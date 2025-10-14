@@ -114,7 +114,7 @@ docker-compose -f docker-compose.lubelogger.yml up -d
 
 This will start:
 - Client (Frontend) on port 8003
-- Server (Backend) on port 8002
+- Server (Backend) - accessed internally via client proxy at `/api/`
 - LubeLogger on port 8080
 
 **To run just the app (if you have LubeLogger running separately):**
@@ -126,8 +126,10 @@ docker-compose up -d
 #### 4. Access the application
 
 - **Frontend:** http://localhost:8003
-- **Backend API:** http://localhost:8002
+- **Backend API:** Accessible via the frontend at http://localhost:8003/api/
 - **LubeLogger:** http://localhost:8080 (if using docker-compose.lubelogger.yml)
+
+**Note:** In Docker mode, the backend is accessed through an nginx proxy in the client container and is not exposed directly.
 
 ### Option 2: Local Development Setup
 
@@ -186,6 +188,7 @@ npm install
 # Configure environment variables
 cp .env.example .env.local
 # Edit .env.local with your actual values
+# Important: Set NEXT_PUBLIC_SERVER_URL=http://localhost:8002 for local development
 nano .env.local  # or use your preferred editor
 
 # Run the development server
@@ -193,6 +196,8 @@ npm run dev
 ```
 
 The frontend will be available at http://localhost:3000
+
+**Important for local development:** Make sure to set `NEXT_PUBLIC_SERVER_URL=http://localhost:8002` in your `.env.local` file so the frontend can connect to your local backend server.
 
 ## Environment Variables
 
@@ -221,10 +226,13 @@ Create a `.env.local` file in the `client/` directory (for local dev) or `.env` 
 |----------|-------------|----------|---------|
 | `NEXT_PUBLIC_AUTH0_DOMAIN` | Your Auth0 domain | ✅ Yes | `your-app.us.auth0.com` |
 | `NEXT_PUBLIC_AUTH0_CLIENT_ID` | Auth0 application client ID | ✅ Yes | `abc123...` |
-| `NEXT_PUBLIC_AUTH0_REDIRECT_URI` | Redirect URI after authentication | ✅ Yes | `http://localhost:3000` |
+| `NEXT_PUBLIC_AUTH0_REDIRECT_URI` | Redirect URI after authentication | ✅ Yes | `http://localhost:3000` (local) or `http://localhost:8003` (Docker) |
 | `NEXT_PUBLIC_AUTH0_AUDIENCE` | Auth0 API audience (must match server) | ✅ Yes | `https://your-api-identifier` |
+| `NEXT_PUBLIC_SERVER_URL` | Direct server URL (optional) | ❌ No | `http://localhost:8002` (only for local dev) |
 
-**Note:** All Next.js environment variables that need to be available in the browser must be prefixed with `NEXT_PUBLIC_`.
+**Note:** 
+- All Next.js environment variables that need to be available in the browser must be prefixed with `NEXT_PUBLIC_`.
+- `NEXT_PUBLIC_SERVER_URL` is only needed for local development when running the client and server separately. In Docker deployments, the nginx proxy handles routing to the backend automatically.
 
 **Example `.env.local` file:**
 
