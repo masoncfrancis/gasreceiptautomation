@@ -1,7 +1,4 @@
 <h1 align="center">
-  <br>
-  <img src="https://raw.githubusercontent.com/MFRANCIS-git/gasreceiptautomation/main/client/public/file.svg" alt="Gas Receipt Automation" width="200">
-  <br>
   Gas Receipt Automation
   <br>
 </h1>
