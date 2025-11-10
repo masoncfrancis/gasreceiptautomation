@@ -38,6 +38,7 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
 ### Prerequisites
 
 - [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 - A running instance of [LubeLogger](https://lubelogger.com/)
 - An Auth0 account for authentication
 - A Google Gemini API key
