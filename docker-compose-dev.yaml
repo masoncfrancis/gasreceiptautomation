@@ -1,6 +1,0 @@
-services:
-  lubelogger:
-    image: ghcr.io/hargata/lubelogger:latest
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
