@@ -61,6 +61,14 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
     AUTH0_AUDIENCE=<your-auth0-api-audience>
     ```
 
+    Create a `.env` file in the `client` directory and add the following environment variables:
+    ```env
+    NEXT_PUBLIC_AUTH0_DOMAIN=<your-auth0-domain>
+    NEXT_PUBLIC_AUTH0_CLIENT_ID=<your-auth0-client-id>
+    NEXT_PUBLIC_AUTH0_REDIRECT_URI=<your-auth0-redirect-uri>
+    NEXT_PUBLIC_AUTH0_AUDIENCE=<your-auth0-api-audience>
+    ```
+
 3.  **Build and run the application:**
     ```bash
     docker-compose up --build
