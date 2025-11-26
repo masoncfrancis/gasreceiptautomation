@@ -19,7 +19,7 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
 
 ## Features
 
-- **Automated Data Extraction**: Utilizes Google's Gemini API to intelligently parse receipt photos and extract key details like total cost, gallons purchased, and transaction date.
+- **Automated Data Extraction**: Utilizes Google's Gemini multi-modal LLM to intelligently parse receipt photos and extract key details like total cost, gallons purchased, and transaction date.
 - **Flexible Odometer Input**: Supports multiple methods for odometer entry, including manual input, a separate photo of the odometer, or extracting it from the receipt photo itself.
 - **Vehicle Management**: Fetches and displays a list of vehicles from your LubeLogger instance, allowing you to associate each gas receipt with the correct vehicle.
 - **Secure Authentication**: Integrated with Auth0 to ensure that access to the application is secure and user-specific.
