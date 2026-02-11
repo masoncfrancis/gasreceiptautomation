@@ -1,5 +1,5 @@
 google-genai==1.*
-pillow==11.*
+pillow==12.*
 pillow-heif==0.22.*
 fastapi[standard]==0.115.*
 python-dotenv==1.1.*
