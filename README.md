@@ -18,6 +18,8 @@
 Gas Receipt Automation is a full-stack application designed to streamline the process of logging fuel expenses. Users can submit a photo of their gas receipt and odometer, and the application will automatically extract the relevant information using AI and record it in [LubeLogger](https://lubelogger.com/), a self-hosted service for vehicle maintenance tracking.
 
 ## Features
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmasoncfrancis%2Fgasreceiptautomation.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmasoncfrancis%2Fgasreceiptautomation?ref=badge_shield)
+
 
 - **Automated Data Extraction**: Utilizes Google's Gemini multi-modal LLM to intelligently parse receipt photos and extract key details like total cost, gallons purchased, and transaction date.
 - **Flexible Odometer Input**: Supports multiple methods for odometer entry, including manual input, a separate photo of the odometer, or extracting it from the receipt photo itself.
@@ -94,3 +96,7 @@ Both services are containerized with Docker and orchestrated using Docker Compos
 
 > [!NOTE]
 > This project is designed to be used with a self-hosted LubeLogger instance. For more information on setting up LubeLogger, please refer to the [official documentation](https://docs.lubelogger.com/).
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmasoncfrancis%2Fgasreceiptautomation.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmasoncfrancis%2Fgasreceiptautomation?ref=badge_large)
