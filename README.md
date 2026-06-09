@@ -47,7 +47,7 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/MFRANCIS-git/gasreceiptautomation.git
+    git clone https://github.com/FrancisLaboratories/gasreceiptautomation.git
     cd gasreceiptautomation
     ```
 
