@@ -14,7 +14,6 @@ const runtimeConfig =
 Sentry.init({
   dsn: runtimeConfig.PUBLIC_SENTRY_DSN || "",
   tracesSampleRate: 1.0,
-  autoSessionTracking: false,
 });
 
 createRoot(document.getElementById("root")!).render(
