@@ -395,6 +395,7 @@ def get_config():
         "PUBLIC_OIDC_CLIENT_ID": os.getenv("PUBLIC_OIDC_CLIENT_ID", ""),
         "PUBLIC_OIDC_AUDIENCE": os.getenv("PUBLIC_OIDC_AUDIENCE", ""),
         "PUBLIC_OIDC_REDIRECT_URI": os.getenv("PUBLIC_OIDC_REDIRECT_URI", ""),
+        "PUBLIC_SENTRY_DSN": os.getenv("PUBLIC_SENTRY_DSN", os.getenv("GLITCHTIP_DSN", "")),
     }
     js = f"window.__RUNTIME_CONFIG__ = {json.dumps(config)};"
     return Response(content=js, media_type="application/javascript")
