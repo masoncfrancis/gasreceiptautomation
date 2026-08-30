@@ -13,4 +13,5 @@ dependencies = [
     "pydantic-settings==2.*",
     "pyjwt[crypto]==2.*",
     "python-dotenv>=1.2.2",
+    "sentry-sdk>=2.68.0",
 ]
