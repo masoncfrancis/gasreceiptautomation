@@ -18,12 +18,14 @@ from authutils import VerifyToken
 
 load_dotenv()
 
-sentry_sdk.init(
-    dsn=os.environ.get("GLITCHTIP_DSN"),
-    traces_sample_rate=0.01,  # 1% of transactions — adjust to your needs
-    auto_session_tracking=False,  # GlitchTip does not support sessions
-    enable_logs=True,  # Opt-in: send logs to GlitchTip (uses disk space)
-)
+sentry_dsn = os.environ.get("GLITCHTIP_DSN") or os.environ.get("PUBLIC_SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        traces_sample_rate=0.01,  # 1% of transactions — adjust to your needs
+        auto_session_tracking=False,  # GlitchTip does not support sessions
+        enable_logs=True,  # Opt-in: send logs to GlitchTip (uses disk space)
+    )
 
 # Check if LUBELOGGER_URL is set in the environment. Quit if not set.
 lube_logger_url = os.environ.get("LUBELOGGER_URL")

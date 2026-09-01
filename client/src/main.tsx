@@ -11,10 +11,13 @@ const runtimeConfig =
     }
   ).__RUNTIME_CONFIG__ ?? {};
 
-Sentry.init({
-  dsn: runtimeConfig.PUBLIC_SENTRY_DSN || "",
-  tracesSampleRate: 1.0,
-});
+const sentryDsn = runtimeConfig.PUBLIC_SENTRY_DSN || "";
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    tracesSampleRate: 1.0,
+  });
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
