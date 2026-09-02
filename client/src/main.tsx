@@ -16,6 +16,7 @@ if (sentryDsn) {
   Sentry.init({
     dsn: sentryDsn,
     tracesSampleRate: 1.0,
+    debug: false,
   });
 }
 

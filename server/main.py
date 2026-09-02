@@ -18,13 +18,14 @@ from authutils import VerifyToken
 
 load_dotenv()
 
-sentry_dsn = os.environ.get("GLITCHTIP_DSN") or os.environ.get("PUBLIC_SENTRY_DSN")
+sentry_dsn = os.environ.get("SENTRY_DSN") or os.environ.get("PUBLIC_SENTRY_DSN")
 if sentry_dsn:
     sentry_sdk.init(
         dsn=sentry_dsn,
-        traces_sample_rate=0.01,  # 1% of transactions — adjust to your needs
-        auto_session_tracking=False,  # GlitchTip does not support sessions
-        enable_logs=True,  # Opt-in: send logs to GlitchTip (uses disk space)
+        traces_sample_rate=1.0,
+        auto_session_tracking=False,
+        enable_logs=True,
+        debug=False,
     )
 
 # Check if LUBELOGGER_URL is set in the environment. Quit if not set.
@@ -397,7 +398,7 @@ def get_config():
         "PUBLIC_OIDC_CLIENT_ID": os.getenv("PUBLIC_OIDC_CLIENT_ID", ""),
         "PUBLIC_OIDC_AUDIENCE": os.getenv("PUBLIC_OIDC_AUDIENCE", ""),
         "PUBLIC_OIDC_REDIRECT_URI": os.getenv("PUBLIC_OIDC_REDIRECT_URI", ""),
-        "PUBLIC_SENTRY_DSN": os.getenv("PUBLIC_SENTRY_DSN", os.getenv("GLITCHTIP_DSN", "")),
+        "PUBLIC_SENTRY_DSN": os.getenv("PUBLIC_SENTRY_DSN", os.getenv("SENTRY_DSN", "")),
     }
     js = f"window.__RUNTIME_CONFIG__ = {json.dumps(config)};"
     return Response(content=js, media_type="application/javascript")
