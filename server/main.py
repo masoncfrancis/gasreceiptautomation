@@ -1,7 +1,16 @@
 from PIL import Image
 from dotenv import load_dotenv
 from datetime import datetime
-from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, Security, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Security,
+    UploadFile,
+)
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
@@ -398,7 +407,9 @@ def get_config():
         "PUBLIC_OIDC_CLIENT_ID": os.getenv("PUBLIC_OIDC_CLIENT_ID", ""),
         "PUBLIC_OIDC_AUDIENCE": os.getenv("PUBLIC_OIDC_AUDIENCE", ""),
         "PUBLIC_OIDC_REDIRECT_URI": os.getenv("PUBLIC_OIDC_REDIRECT_URI", ""),
-        "PUBLIC_SENTRY_DSN": os.getenv("PUBLIC_SENTRY_DSN", os.getenv("SENTRY_DSN", "")),
+        "PUBLIC_SENTRY_DSN": os.getenv(
+            "PUBLIC_SENTRY_DSN", os.getenv("SENTRY_DSN", "")
+        ),
     }
     js = f"window.__RUNTIME_CONFIG__ = {json.dumps(config)};"
     return Response(content=js, media_type="application/javascript")
