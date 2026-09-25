@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import * as Sentry from "@sentry/react";
 import { useAuth } from "react-oidc-context";
 import LoadingScreen from "./LoadingScreen";
 
@@ -36,10 +37,46 @@ function GasLogForm() {
   };
 
   const fetchWithAuth = async (input: RequestInfo, init: RequestInit = {}) => {
-    const token = await getValidAccessToken();
-    const headers = new Headers(init.headers || {});
-    headers.set("Authorization", `Bearer ${token}`);
-    return fetch(input, { ...init, headers });
+    const requestMethod =
+      init.method || (input instanceof Request ? input.method : "GET");
+    const method = requestMethod.toUpperCase();
+    let pathname = "unknown";
+    try {
+      pathname = new URL(
+        input instanceof Request ? input.url : input,
+        window.location.href,
+      ).pathname;
+    } catch {
+      // Keep error reporting from interfering with the request path.
+    }
+
+    try {
+      const token = await getValidAccessToken();
+      const headers = new Headers(init.headers || {});
+      headers.set("Authorization", `Bearer ${token}`);
+      const response = await fetch(input, { ...init, headers });
+
+      if (!response.ok) {
+        Sentry.withScope((scope) => {
+          scope.setTag("http.status_code", response.status);
+          scope.setTag("http.method", method);
+          scope.setContext("request", { path: pathname });
+          Sentry.captureMessage(
+            `HTTP request failed with status ${response.status}`,
+            "error",
+          );
+        });
+      }
+
+      return response;
+    } catch (error) {
+      Sentry.withScope((scope) => {
+        scope.setTag("http.method", method);
+        scope.setContext("request", { path: pathname });
+        Sentry.captureException(error);
+      });
+      throw error;
+    }
   };
 
   // Vehicle selection state
