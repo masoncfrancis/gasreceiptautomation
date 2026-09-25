@@ -118,6 +118,59 @@ def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = Fa
     )
 
 
+async def extract_gas_data(
+    receiptPhoto, odometerPhoto, odometerReading, odometerInputMethod
+):
+    receipt_data = sendDataToAI(receiptPhoto, odometerInputMethod)
+    if receipt_data.get("error"):
+        raise HTTPException(status_code=422, detail="Could not extract receipt data")
+
+    if receipt_data.get("datetime") is None:
+        receipt_data["datetime"] = datetime.now().strftime("%m/%d/%Y %H:%M")
+
+    if odometerInputMethod == "separate_photo":
+        odometer_data = sendDataToAI(
+            odometerPhoto, odometerInputMethod, getOdometerOnly=True
+        )
+    elif odometerInputMethod == "on_receipt_photo":
+        odometer_data = sendDataToAI(
+            receiptPhoto, odometerInputMethod, getOdometerOnly=True
+        )
+    else:
+        odometer_data = {
+            "odometerReading": int(odometerReading)
+            if odometerReading and odometerReading.isdigit()
+            else None
+        }
+
+    if odometer_data.get("error") or odometer_data.get("odometerReading") is None:
+        raise HTTPException(status_code=422, detail="Could not extract odometer data")
+
+    receipt_data["odometerReading"] = odometer_data["odometerReading"]
+    return receipt_data
+
+
+@router.post("/previewGas")
+async def preview_gas(
+    auth_result: str = Security(auth.verify),
+    receiptPhoto: UploadFile = File(...),
+    odometerPhoto: Optional[UploadFile] = File(None),
+    odometerReading: Optional[str] = Form(None),
+    odometerInputMethod: str = Form(...),
+):
+    if odometerInputMethod == "separate_photo" and odometerPhoto is None:
+        raise HTTPException(status_code=400, detail="odometerPhoto is required")
+    if odometerInputMethod == "manual" and not odometerReading:
+        raise HTTPException(status_code=400, detail="odometerReading is required")
+    if odometerInputMethod not in {"separate_photo", "on_receipt_photo", "manual"}:
+        raise HTTPException(status_code=400, detail="Invalid odometerInputMethod")
+
+    receipt_data = await extract_gas_data(
+        receiptPhoto, odometerPhoto, odometerReading, odometerInputMethod
+    )
+    return {"receiptData": receipt_data}
+
+
 @router.post("/submitGas")
 async def submit_gas(
     auth_result: str = Security(auth.verify),
@@ -141,6 +194,12 @@ async def submit_gas(
     ),
     vehicleId: str = Form(..., description="Id of Vehicle"),
     userName: str = Form(..., description="Name of User (for notes)"),
+    confirmedTotalCost: float = Form(...),
+    confirmedGallonsPurchased: float = Form(...),
+    confirmedDatetime: str = Form(...),
+    confirmedStoreBrand: str = Form(...),
+    confirmedStoreAddress: str = Form(...),
+    confirmedOdometerReading: int = Form(...),
 ):
     print("Starting gas submission process.")
 
@@ -160,39 +219,22 @@ async def submit_gas(
             detail="odometerReading is required when odometerInputMethod is 'manual'",
         )
 
-    print("Extracting data from receipt photo using AI.")
-    receipt_data = sendDataToAI(receiptPhoto, odometerInputMethod)
+    if (
+        confirmedTotalCost <= 0
+        or confirmedGallonsPurchased <= 0
+        or confirmedOdometerReading < 0
+        or not confirmedDatetime.strip()
+    ):
+        raise HTTPException(status_code=400, detail="Confirmed values are invalid")
 
-    # Check to make sure date is present
-    dateIncluded = True
-    if receipt_data.get("datetime") is None:
-        print("No date found in receipt data, setting datetime to current time.")
-        receipt_data["datetime"] = datetime.now().strftime("%m/%d/%Y %H:%M")
-        dateIncluded = False
-
-    odometer_data = {"odometerReading": 999999}
-
-    if odometerInputMethod == "separate_photo":
-        print("Extracting odometer data from separate odometer photo using AI.")
-        odometer_data = sendDataToAI(
-            odometerPhoto, odometerInputMethod, getOdometerOnly=True
-        )
-
-    elif odometerInputMethod == "on_receipt_photo":
-        print("Extracting odometer data from receipt photo using AI.")
-        odometer_data = sendDataToAI(
-            receiptPhoto, odometerInputMethod, getOdometerOnly=True
-        )
-
-    elif odometerInputMethod == "manual":
-        print("Using manual odometer reading provided by user.")
-        odometer_data = {
-            "odometerReading": int(odometerReading)
-            if odometerReading.isdigit()
-            else 999999
-        }
-
-    receipt_data["odometerReading"] = odometer_data.get("odometerReading")
+    receipt_data = {
+        "totalCost": confirmedTotalCost,
+        "gallonsPurchased": confirmedGallonsPurchased,
+        "datetime": confirmedDatetime,
+        "storeBrand": confirmedStoreBrand,
+        "storeAddress": confirmedStoreAddress,
+        "odometerReading": confirmedOdometerReading,
+    }
 
     print(
         "Uploading receipt and odometer photos to /api/documents/upload (if present)."
@@ -251,7 +293,7 @@ async def submit_gas(
     store_brand = receipt_data.get("storeBrand", "")
     store_address = receipt_data.get("storeAddress", "")
     submitting_user = userName
-    receipt_datetime = receipt_data.get("datetime", "unknown time and date")
+    receipt_datetime = receipt_data["datetime"]
 
     # Obtener la hora actual en Eastern Time
     now_et = datetime.now(ZoneInfo("US/Eastern"))
@@ -259,10 +301,7 @@ async def submit_gas(
 
     notes_value = f"Brand: {store_brand}\nAddress: {store_address}\nReceipt dated {receipt_datetime}\n(Submitted by {submitting_user} at {formatted_time})"
 
-    dateTime = receipt_data.get("datetime")
-    if not dateIncluded:
-        notes_value += "\n\nNote: The date was not found on the receipt, so the current time was used instead."
-        dateTime = formatted_time
+    dateTime = receipt_data["datetime"]
 
     # Build JSON payload. LubeLogger expects a JSON body for the gas record
     # submission and an array under the 'files' key. Use the parsed JSON array

@@ -47,6 +47,7 @@ def sendImagePromptWithSchema(imageFile, textPrompt, responseSchema):
         # Open the image from the received file
         if hasattr(imageFile, "file"):
             # FastAPI UploadFile
+            imageFile.file.seek(0)
             img = Image.open(imageFile.file)
         elif hasattr(imageFile, "read"):
             # file-like object

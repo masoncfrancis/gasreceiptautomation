@@ -3,6 +3,15 @@ import * as Sentry from "@sentry/react";
 import { useAuth } from "react-oidc-context";
 import LoadingScreen from "./LoadingScreen";
 
+type ReviewData = {
+  totalCost: number | string;
+  gallonsPurchased: number | string;
+  datetime: string;
+  storeBrand: string;
+  storeAddress: string;
+  odometerReading: number | string;
+};
+
 function GasLogForm() {
   // State to hold form data
   const [receiptPhoto, setReceiptPhoto] = useState<File | null>(null);
@@ -15,6 +24,7 @@ function GasLogForm() {
   const [submissionStatus, setSubmissionStatus] = useState<
     null | "success" | "error"
   >(null);
+  const [reviewData, setReviewData] = useState<ReviewData | null>(null);
   // State for validation errors
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -128,10 +138,7 @@ function GasLogForm() {
   // Handle text input changes
   const handleTextChange = (
     event: React.ChangeEvent<HTMLInputElement>,
-    setState: {
-      (value: React.SetStateAction<string>): void;
-      (arg0: any): void;
-    },
+    setState: (value: React.SetStateAction<string>) => void,
   ) => {
     setState(event.target.value);
     setValidationErrors((prev) => {
@@ -197,8 +204,8 @@ function GasLogForm() {
           setVehicles(
             data.vehicles.map(
               (
-                v: { year: any; make: any; model: any; vehicleId: any },
-                idx: any,
+                v: { year: number; make: string; model: string; vehicleId: number },
+                idx: number,
               ) => ({
                 id: `${v.year}-${v.make}-${v.model}-${idx}`,
                 vehicleId: v.vehicleId,
@@ -210,7 +217,7 @@ function GasLogForm() {
           setVehicles([]);
           setVehiclesError("Invalid data format received from server");
         }
-      } catch (err: any) {
+      } catch {
         setVehiclesError("Could not load vehicles");
         setVehicles([]);
       } finally {
@@ -260,7 +267,25 @@ function GasLogForm() {
   const handleSubmit = async (event: { preventDefault: () => void }) => {
     event.preventDefault();
 
-    if (!validateForm()) {
+    if (reviewData) {
+      const totalCost = Number(reviewData.totalCost);
+      const gallonsPurchased = Number(reviewData.gallonsPurchased);
+      const odometer = Number(reviewData.odometerReading);
+      if (
+        !reviewData.datetime.trim() ||
+        !reviewData.storeBrand.trim() ||
+        !reviewData.storeAddress.trim() ||
+        !Number.isFinite(totalCost) ||
+        totalCost <= 0 ||
+        !Number.isFinite(gallonsPurchased) ||
+        gallonsPurchased <= 0 ||
+        !Number.isInteger(odometer) ||
+        odometer < 0
+      ) {
+        setSubmissionStatus("error");
+        return;
+      }
+    } else if (!validateForm()) {
       return;
     }
 
@@ -268,26 +293,53 @@ function GasLogForm() {
     setSubmissionStatus(null);
 
     const formData = new FormData();
-    formData.append("vehicleId", String(selectedVehicle));
-    if (receiptPhoto) {
-      formData.append("receiptPhoto", receiptPhoto);
-    }
-
+    formData.append("receiptPhoto", receiptPhoto!);
     if (odometerInputMethod === "separate_photo" && odometerPhoto) {
       formData.append("odometerPhoto", odometerPhoto);
-    } else if (odometerInputMethod === "manual" && odometerReading) {
-      formData.append("odometerReading", odometerReading);
     }
     formData.append("odometerInputMethod", odometerInputMethod);
-    formData.append("filledToFull", filledToFull);
-    formData.append("filledLastTime", filledLastTime);
-    const userName = user?.profile?.name || "";
-    formData.append("userName", userName);
-
-    const apiEndpoint = `/api/submitGas`;
+    if (odometerInputMethod === "manual") {
+      formData.append("odometerReading", odometerReading);
+    }
 
     try {
-      const response = await fetchWithAuth(apiEndpoint, {
+      if (!reviewData) {
+        const previewResponse = await fetchWithAuth(`/api/previewGas`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!previewResponse.ok) throw new Error("Could not extract receipt data");
+        const preview = await previewResponse.json();
+        const extracted = preview.receiptData;
+        setReviewData({
+          totalCost: extracted.totalCost ?? "",
+          gallonsPurchased: extracted.gallonsPurchased ?? "",
+          datetime: extracted.datetime ?? "",
+          storeBrand: extracted.storeBrand ?? "",
+          storeAddress: extracted.storeAddress ?? "",
+          odometerReading: extracted.odometerReading ?? "",
+        });
+        return;
+      }
+
+      formData.append("vehicleId", String(selectedVehicle));
+      formData.append("filledToFull", filledToFull);
+      formData.append("filledLastTime", filledLastTime);
+      formData.append("userName", user?.profile?.name || "");
+      formData.append("confirmedTotalCost", String(reviewData.totalCost));
+      formData.append(
+        "confirmedGallonsPurchased",
+        String(reviewData.gallonsPurchased),
+      );
+      formData.append("confirmedDatetime", reviewData.datetime);
+      formData.append("confirmedStoreBrand", reviewData.storeBrand);
+      formData.append("confirmedStoreAddress", reviewData.storeAddress);
+      formData.append(
+        "confirmedOdometerReading",
+        String(reviewData.odometerReading),
+      );
+
+      const response = await fetchWithAuth(`/api/submitGas`, {
         method: "POST",
         body: formData,
       });
@@ -302,16 +354,17 @@ function GasLogForm() {
         setFilledToFull("");
         setFilledLastTime("");
         setSelectedVehicle(null);
+        setReviewData(null);
         setValidationErrors({});
       } else {
         console.error("Form submission failed:", response.statusText);
-        setSubmissionStatus("error");
+      setSubmissionStatus("error");
         const errorData = await response.json();
         console.error("Error details:", errorData);
       }
     } catch (error) {
       console.error("Error during form submission:", error);
-      setSubmissionStatus("error");
+        setSubmissionStatus("error");
     } finally {
       setIsSubmitting(false);
     }
@@ -412,8 +465,67 @@ function GasLogForm() {
           )}
         </div>
 
-        {/* Hide rest of form until vehicle is selected */}
-        {!selectedVehicle ? (
+        {reviewData ? (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Confirm receipt details
+              </h3>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                Check extracted values and correct anything that looks wrong before sending.
+              </p>
+            </div>
+            {([
+              ["totalCost", "Total cost", "number"],
+              ["gallonsPurchased", "Gallons purchased", "number"],
+              ["datetime", "Date and time", "text"],
+              ["storeBrand", "Store brand", "text"],
+              ["storeAddress", "Store address", "text"],
+              ["odometerReading", "Odometer reading", "number"],
+            ] as const).map(([field, label, type]) => (
+              <label key={field} className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+                {label}
+                <input
+                  type={type}
+                  value={reviewData[field]}
+                  onChange={(event) =>
+                    setReviewData((current) =>
+                      current
+                        ? { ...current, [field]: event.target.value }
+                        : current,
+                    )
+                  }
+                  step={field === "odometerReading" ? 1 : "any"}
+                  className="mt-2 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                />
+              </label>
+            ))}
+            <div className="flex gap-3 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setReviewData(null);
+                  setSubmissionStatus(null);
+                }}
+                className="w-1/3 rounded-lg border border-gray-300 px-4 py-3 font-bold text-gray-700 dark:border-gray-500 dark:text-gray-200"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-2/3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 font-bold text-white disabled:opacity-50"
+              >
+                {isSubmitting ? "Sending..." : "Send to LubeLogger"}
+              </button>
+            </div>
+            {submissionStatus === "error" && (
+              <p className="text-center text-red-600 dark:text-red-400">
+                Check values and try again.
+              </p>
+            )}
+          </div>
+        ) : !selectedVehicle ? (
           <div className="text-center text-gray-600 dark:text-gray-400 mb-4">
             Please select a vehicle to continue.
           </div>
@@ -672,7 +784,7 @@ function GasLogForm() {
                     Looking at your receipt...
                   </span>
                 ) : (
-                  "Submit"
+                  "Review Receipt"
                 )}
               </button>
               {submissionStatus === "error" && (

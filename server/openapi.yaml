@@ -4,6 +4,35 @@ info:
   version: 1.0.0
   description: API for submitting gas receipts and odometer readings.
 paths:
+  /previewGas:
+    post:
+      summary: Extract receipt and odometer information for review
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                receiptPhoto:
+                  type: string
+                  format: binary
+                odometerPhoto:
+                  type: string
+                  format: binary
+                odometerReading:
+                  type: string
+                odometerInputMethod:
+                  type: string
+                  enum: [separate_photo, on_receipt_photo, manual]
+              required: [receiptPhoto, odometerInputMethod]
+      responses:
+        '200':
+          description: Extracted values for user confirmation
+        '400':
+          description: Invalid odometer input
+        '422':
+          description: Extraction failed
   /submitGas:
     post:
       summary: Submit gas receipt and odometer information
@@ -37,16 +66,34 @@ paths:
                   type: string
                   enum: [yes, no]
                   description: Whether the car was filled to full
-                filledLastTime:
+                 filledLastTime:
+                   type: string
+                   enum: [yes, no]
+                   description: Whether the form was filled last time
+                confirmedTotalCost:
+                  type: number
+                confirmedGallonsPurchased:
+                  type: number
+                confirmedDatetime:
                   type: string
-                  enum: [yes, no]
-                  description: Whether the form was filled last time
+                confirmedStoreBrand:
+                  type: string
+                confirmedStoreAddress:
+                  type: string
+                confirmedOdometerReading:
+                  type: integer
               required:
                 - vehicleId
                 - receiptPhoto
                 - odometerInputMethod
                 - filledToFull
-                - filledLastTime
+                 - filledLastTime
+                 - confirmedTotalCost
+                 - confirmedGallonsPurchased
+                 - confirmedDatetime
+                 - confirmedStoreBrand
+                 - confirmedStoreAddress
+                 - confirmedOdometerReading
       responses:
         '200':
           description: Submission successful

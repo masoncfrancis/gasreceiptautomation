@@ -90,14 +90,15 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
 2.  **Select a vehicle**: Choose the vehicle you are logging a gas receipt for from the dropdown menu.
 3.  **Upload receipt**: Upload a clear photo of your gas receipt.
 4.  **Provide odometer reading**: Enter the odometer reading manually or upload a photo of the odometer.
-5.  **Submit**: Click the "Submit" button. The application will process the information and create a new gas record in LubeLogger.
+5.  **Review**: Click "Review Receipt". The application extracts receipt and odometer details without contacting LubeLogger.
+6.  **Confirm and submit**: Correct any extracted values, then click "Send to LubeLogger" to create the gas record.
 
 ## Architecture
 
 The application is composed of two main services:
 
 -   **Client**: A [Vite](https://vite.dev/)-built React single-page application served by [nginx](https://nginx.org/). It provides the user interface for submitting gas receipts and communicates with the backend API.
--   **Server**: A FastAPI backend that handles the business logic. It receives receipt and odometer data, uses the OpenAI SDK for LLM-based data extraction, then creates a gas record in LubeLogger.
+-   **Server**: A FastAPI backend that extracts receipt and odometer data, returns it for user confirmation, then creates a gas record in LubeLogger from confirmed values.
 
 Both services are containerized with Docker and orchestrated using Docker Compose.
 
