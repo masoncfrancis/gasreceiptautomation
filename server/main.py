@@ -8,6 +8,7 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Request,
     Security,
     UploadFile,
 )
@@ -33,7 +34,6 @@ if sentry_dsn:
         dsn=sentry_dsn,
         traces_sample_rate=1.0,
         auto_session_tracking=False,
-        enable_logs=True,
         debug=False,
     )
 
@@ -67,6 +67,23 @@ app = FastAPI(
     version="1.0.0",
     description="API for submitting gas receipts and odometer readings.",
 )
+
+
+@app.middleware("http")
+async def capture_http_errors(request: Request, call_next):
+    response = await call_next(request)
+    if response.status_code >= 400:
+        with sentry_sdk.push_scope() as scope:
+            scope.set_tag("http.status_code", response.status_code)
+            scope.set_tag("http.method", request.method)
+            scope.set_context("request", {"path": request.url.path})
+            sentry_sdk.capture_message(
+                f"HTTP response returned with status {response.status_code}",
+                level="error",
+            )
+    return response
+
+
 auth = VerifyToken()
 router = APIRouter(prefix="/api")
 
