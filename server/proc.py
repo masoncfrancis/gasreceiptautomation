@@ -111,20 +111,23 @@ def getReceiptPromptInfo():
         "type": "object",
         "properties": {
             "totalCost": {
-                "type": "number",
+                "anyOf": [{"type": "number"}, {"type": "null"}],
                 "description": "Total cost of the fuel purchase",
             },
             "gallonsPurchased": {
-                "type": "number",
+                "anyOf": [{"type": "number"}, {"type": "null"}],
                 "description": "Number of gallons purchased",
             },
             "datetime": {
-                "type": "string",
+                "anyOf": [{"type": "string"}, {"type": "null"}],
                 "description": "Date and time of the purchase, formatted as MM/DD/YYYY HH:MM",
             },
-            "storeBrand": {"type": "string", "description": "Brand of the gas station"},
+            "storeBrand": {
+                "anyOf": [{"type": "string"}, {"type": "null"}],
+                "description": "Brand of the gas station",
+            },
             "storeAddress": {
-                "type": "string",
+                "anyOf": [{"type": "string"}, {"type": "null"}],
                 "description": "Address of the gas station",
             },
         },
@@ -149,7 +152,7 @@ def getOdometerPromptInfo(imageType):
         "type": "object",
         "properties": {
             "odometerReading": {
-                "type": "integer",
+                "anyOf": [{"type": "integer"}, {"type": "null"}],
                 "description": "Odometer reading as an integer value",
             }
         },

@@ -121,12 +121,20 @@ def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = Fa
 async def extract_gas_data(
     receiptPhoto, odometerPhoto, odometerReading, odometerInputMethod
 ):
+    receipt_fields = [
+        "totalCost",
+        "gallonsPurchased",
+        "datetime",
+        "storeBrand",
+        "storeAddress",
+    ]
     receipt_data = sendDataToAI(receiptPhoto, odometerInputMethod)
     if receipt_data.get("error"):
-        raise HTTPException(status_code=422, detail="Could not extract receipt data")
+        receipt_data = {field: None for field in receipt_fields}
 
-    if receipt_data.get("datetime") is None:
-        receipt_data["datetime"] = datetime.now().strftime("%m/%d/%Y %H:%M")
+    missing_fields = [
+        field for field in receipt_fields if receipt_data.get(field) is None
+    ]
 
     if odometerInputMethod == "separate_photo":
         odometer_data = sendDataToAI(
@@ -144,9 +152,11 @@ async def extract_gas_data(
         }
 
     if odometer_data.get("error") or odometer_data.get("odometerReading") is None:
-        raise HTTPException(status_code=422, detail="Could not extract odometer data")
+        odometer_data = {"odometerReading": None}
+        missing_fields.append("odometerReading")
 
     receipt_data["odometerReading"] = odometer_data["odometerReading"]
+    receipt_data["missingFields"] = missing_fields
     return receipt_data
 
 

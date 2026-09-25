@@ -25,6 +25,7 @@ function GasLogForm() {
     null | "success" | "error"
   >(null);
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   // State for validation errors
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -319,6 +320,7 @@ function GasLogForm() {
           storeAddress: extracted.storeAddress ?? "",
           odometerReading: extracted.odometerReading ?? "",
         });
+        setMissingFields(extracted.missingFields ?? []);
         return;
       }
 
@@ -355,6 +357,7 @@ function GasLogForm() {
         setFilledLastTime("");
         setSelectedVehicle(null);
         setReviewData(null);
+        setMissingFields([]);
         setValidationErrors({});
       } else {
         console.error("Form submission failed:", response.statusText);
@@ -489,15 +492,25 @@ function GasLogForm() {
                   type={type}
                   value={reviewData[field]}
                   onChange={(event) =>
-                    setReviewData((current) =>
-                      current
-                        ? { ...current, [field]: event.target.value }
-                        : current,
-                    )
+                    {
+                      setReviewData((current) =>
+                        current
+                          ? { ...current, [field]: event.target.value }
+                          : current,
+                      );
+                      setMissingFields((current) =>
+                        current.filter((missingField) => missingField !== field),
+                      );
+                    }
                   }
                   step={field === "odometerReading" ? 1 : "any"}
                   className="mt-2 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
+                {missingFields.includes(field) && (
+                  <span className="mt-1 block text-sm font-normal text-amber-600 dark:text-amber-300">
+                    We couldn't read the {label.toLowerCase()}. Please enter it.
+                  </span>
+                )}
               </label>
             ))}
             <div className="flex gap-3 pt-3">
@@ -505,6 +518,7 @@ function GasLogForm() {
                 type="button"
                 onClick={() => {
                   setReviewData(null);
+                  setMissingFields([]);
                   setSubmissionStatus(null);
                 }}
                 className="w-1/3 rounded-lg border border-gray-300 px-4 py-3 font-bold text-gray-700 dark:border-gray-500 dark:text-gray-200"
