@@ -487,12 +487,12 @@ function GasLogForm() {
             </div>
             {(
               [
+                ["odometerReading", "Odometer reading", "number"],
                 ["totalCost", "Total cost", "number"],
                 ["gallonsPurchased", "Gallons purchased", "number"],
                 ["datetime", "Date and time", "text"],
                 ["storeBrand", "Store brand", "text"],
                 ["storeAddress", "Store address", "text"],
-                ["odometerReading", "Odometer reading", "number"],
               ] as const
             ).map(([field, label, type]) => (
               <label
