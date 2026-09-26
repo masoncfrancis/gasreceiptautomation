@@ -205,7 +205,12 @@ function GasLogForm() {
           setVehicles(
             data.vehicles.map(
               (
-                v: { year: number; make: string; model: string; vehicleId: number },
+                v: {
+                  year: number;
+                  make: string;
+                  model: string;
+                  vehicleId: number;
+                },
                 idx: number,
               ) => ({
                 id: `${v.year}-${v.make}-${v.model}-${idx}`,
@@ -309,7 +314,8 @@ function GasLogForm() {
           method: "POST",
           body: formData,
         });
-        if (!previewResponse.ok) throw new Error("Could not extract receipt data");
+        if (!previewResponse.ok)
+          throw new Error("Could not extract receipt data");
         const preview = await previewResponse.json();
         const extracted = preview.receiptData;
         setReviewData({
@@ -361,13 +367,13 @@ function GasLogForm() {
         setValidationErrors({});
       } else {
         console.error("Form submission failed:", response.statusText);
-      setSubmissionStatus("error");
+        setSubmissionStatus("error");
         const errorData = await response.json();
         console.error("Error details:", errorData);
       }
     } catch (error) {
       console.error("Error during form submission:", error);
-        setSubmissionStatus("error");
+      setSubmissionStatus("error");
     } finally {
       setIsSubmitting(false);
     }
@@ -475,34 +481,38 @@ function GasLogForm() {
                 Confirm receipt details
               </h3>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                Check extracted values and correct anything that looks wrong before sending.
+                Check extracted values and correct anything that looks wrong
+                before sending.
               </p>
             </div>
-            {([
-              ["totalCost", "Total cost", "number"],
-              ["gallonsPurchased", "Gallons purchased", "number"],
-              ["datetime", "Date and time", "text"],
-              ["storeBrand", "Store brand", "text"],
-              ["storeAddress", "Store address", "text"],
-              ["odometerReading", "Odometer reading", "number"],
-            ] as const).map(([field, label, type]) => (
-              <label key={field} className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+            {(
+              [
+                ["totalCost", "Total cost", "number"],
+                ["gallonsPurchased", "Gallons purchased", "number"],
+                ["datetime", "Date and time", "text"],
+                ["storeBrand", "Store brand", "text"],
+                ["storeAddress", "Store address", "text"],
+                ["odometerReading", "Odometer reading", "number"],
+              ] as const
+            ).map(([field, label, type]) => (
+              <label
+                key={field}
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
                 {label}
                 <input
                   type={type}
                   value={reviewData[field]}
-                  onChange={(event) =>
-                    {
-                      setReviewData((current) =>
-                        current
-                          ? { ...current, [field]: event.target.value }
-                          : current,
-                      );
-                      setMissingFields((current) =>
-                        current.filter((missingField) => missingField !== field),
-                      );
-                    }
-                  }
+                  onChange={(event) => {
+                    setReviewData((current) =>
+                      current
+                        ? { ...current, [field]: event.target.value }
+                        : current,
+                    );
+                    setMissingFields((current) =>
+                      current.filter((missingField) => missingField !== field),
+                    );
+                  }}
                   step={field === "odometerReading" ? 1 : "any"}
                   className="mt-2 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
@@ -530,7 +540,7 @@ function GasLogForm() {
                 disabled={isSubmitting}
                 className="w-2/3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 font-bold text-white disabled:opacity-50"
               >
-                {isSubmitting ? "Sending..." : "Send to LubeLogger"}
+                {isSubmitting ? "Sending..." : "Submit Receipt"}
               </button>
             </div>
             {submissionStatus === "error" && (

@@ -28,11 +28,11 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
 
 ## Tech Stack
 
-| Component | Technology |
-| :--- | :--- |
-| **Frontend** | [Vite](https://vite.dev/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [oidc-client-ts](https://github.com/authts/oidc-client-ts), [nginx](https://nginx.org/) |
-| **Backend** | [FastAPI](https://fastapi.tiangolo.com/), [Python](https://www.python.org/), [uv](https://docs.astral.sh/uv/), [OpenAI SDK](https://pypi.org/project/openai/) (LLM-agnostic), [PyJWT](https://pyjwt.readthedocs.io/) (OIDC), [Pillow](https://python-pillow.org/) |
-| **Deployment** | [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/) |
+| Component      | Technology                                                                                                                                                                                                                                                        |
+| :------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend**   | [Vite](https://vite.dev/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [oidc-client-ts](https://github.com/authts/oidc-client-ts), [nginx](https://nginx.org/)                          |
+| **Backend**    | [FastAPI](https://fastapi.tiangolo.com/), [Python](https://www.python.org/), [uv](https://docs.astral.sh/uv/), [OpenAI SDK](https://pypi.org/project/openai/) (LLM-agnostic), [PyJWT](https://pyjwt.readthedocs.io/) (OIDC), [Pillow](https://python-pillow.org/) |
+| **Deployment** | [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/)                                                                                                                                                                             |
 
 ## Getting Started
 
@@ -47,6 +47,7 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
 ### Installation
 
 1.  **Clone the repository:**
+
     ```bash
     git clone https://github.com/FrancisLaboratories/gasreceiptautomation.git
     cd gasreceiptautomation
@@ -65,6 +66,7 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
     ```
 
     Create a `.env` file in the `client` directory and add the following environment variables:
+
     ```env
     VITE_OIDC_ISSUER=<your-oidc-issuer>
     VITE_OIDC_CLIENT_ID=<your-oidc-client-id>
@@ -73,11 +75,13 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
     ```
 
 3.  **Build and run the application:**
+
     ```bash
     docker compose up --build
     ```
 
     To also spin up a bundled LubeLogger instance:
+
     ```bash
     docker compose -f docker-compose.yaml -f docker-compose.lubelogger.yml up --build
     ```
@@ -91,14 +95,14 @@ Gas Receipt Automation is a full-stack application designed to streamline the pr
 3.  **Upload receipt**: Upload a clear photo of your gas receipt.
 4.  **Provide odometer reading**: Enter the odometer reading manually or upload a photo of the odometer.
 5.  **Review**: Click "Review Receipt". The application extracts receipt and odometer details without contacting LubeLogger.
-6.  **Confirm and submit**: Correct any extracted values, then click "Send to LubeLogger" to create the gas record.
+6.  **Confirm and submit**: Correct any extracted values, then click "Submit Receipt" to create the gas record.
 
 ## Architecture
 
 The application is composed of two main services:
 
--   **Client**: A [Vite](https://vite.dev/)-built React single-page application served by [nginx](https://nginx.org/). It provides the user interface for submitting gas receipts and communicates with the backend API.
--   **Server**: A FastAPI backend that extracts receipt and odometer data, returns it for user confirmation, then creates a gas record in LubeLogger from confirmed values.
+- **Client**: A [Vite](https://vite.dev/)-built React single-page application served by [nginx](https://nginx.org/). It provides the user interface for submitting gas receipts and communicates with the backend API.
+- **Server**: A FastAPI backend that extracts receipt and odometer data, returns it for user confirmation, then creates a gas record in LubeLogger from confirmed values.
 
 Both services are containerized with Docker and orchestrated using Docker Compose.
 
