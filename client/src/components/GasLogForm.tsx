@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { useAuth } from "react-oidc-context";
 import LoadingScreen from "./LoadingScreen";
@@ -26,8 +26,6 @@ function GasLogForm() {
   >(null);
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [activeReviewField, setActiveReviewField] = useState<keyof ReviewData | null>(null);
-  const reviewInputRef = useRef<HTMLInputElement>(null);
   // State for validation errors
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -121,12 +119,6 @@ function GasLogForm() {
       localStorage.setItem("theme", "light");
     }
   }, [theme]);
-
-  useEffect(() => {
-    if (activeReviewField) {
-      reviewInputRef.current?.focus();
-    }
-  }, [activeReviewField]);
 
   // Handle file input changes
   const handleFileChange = (
@@ -372,7 +364,6 @@ function GasLogForm() {
         setSelectedVehicle(null);
         setReviewData(null);
         setMissingFields([]);
-        setActiveReviewField(null);
         setValidationErrors({});
       } else {
         console.error("Form submission failed:", response.statusText);
@@ -504,38 +495,13 @@ function GasLogForm() {
                 ["storeAddress", "Store address", "text"],
               ] as const
             ).map(([field, label, type]) => (
-              <div
+              <label
                 key={field}
                 className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <span>{label}</span>
-                  <button
-                    type="button"
-                    aria-label={`Edit ${label.toLowerCase()}`}
-                    onClick={() => setActiveReviewField(field)}
-                    className="rounded-md p-1 text-gray-500 hover:bg-gray-200 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-blue-300"
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15.232 5.232l3.536 3.536M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                {label}
                 <input
-                  ref={activeReviewField === field ? reviewInputRef : undefined}
                   type={type}
-                  readOnly={activeReviewField !== field}
                   value={reviewData[field]}
                   onChange={(event) => {
                     setReviewData((current) =>
@@ -548,14 +514,14 @@ function GasLogForm() {
                     );
                   }}
                   step={field === "odometerReading" ? 1 : "any"}
-                  className={`mt-2 w-full rounded-lg border px-3 py-2 text-gray-800 dark:text-gray-100 ${activeReviewField === field ? "border-blue-500 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800" : "border-gray-200 bg-gray-100 dark:border-gray-600 dark:bg-gray-800/60"}`}
+                  className="mt-2 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
                 {missingFields.includes(field) && (
                   <span className="mt-1 block text-sm font-normal text-amber-600 dark:text-amber-300">
                     We couldn't read the {label.toLowerCase()}. Please enter it.
                   </span>
                 )}
-              </div>
+              </label>
             ))}
             <div className="flex gap-3 pt-3">
               <button
@@ -563,7 +529,6 @@ function GasLogForm() {
                 onClick={() => {
                   setReviewData(null);
                   setMissingFields([]);
-                  setActiveReviewField(null);
                   setSubmissionStatus(null);
                 }}
                 className="w-1/3 rounded-lg border border-gray-300 px-4 py-3 font-bold text-gray-700 dark:border-gray-500 dark:text-gray-200"
