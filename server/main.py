@@ -118,6 +118,28 @@ def sendDataToAI(imageFile, odometerInputMethod: str, getOdometerOnly: bool = Fa
     )
 
 
+def validate_record_datetime(value: str) -> str:
+    """Reject impossible AI/user dates before uploading attachments."""
+    formats = (
+        "%Y-%m-%d %H:%M",
+        "%m/%d/%Y %H:%M",
+        "%m/%d/%y %H:%M",
+    )
+    for date_format in formats:
+        try:
+            datetime.strptime(value.strip(), date_format)
+            return value.strip()
+        except ValueError:
+            continue
+    raise HTTPException(
+        status_code=400,
+        detail=(
+            "Invalid receipt date/time. Use a valid date and time, "
+            "for example 09/19/26 17:29."
+        ),
+    )
+
+
 async def extract_gas_data(
     receiptPhoto, odometerPhoto, odometerReading, odometerInputMethod
 ):
@@ -245,6 +267,9 @@ async def submit_gas(
         "storeAddress": confirmedStoreAddress,
         "odometerReading": confirmedOdometerReading,
     }
+
+    # Validate before uploading files so malformed AI dates do not leave orphaned documents.
+    receipt_data["datetime"] = validate_record_datetime(receipt_data["datetime"])
 
     print(
         "Uploading receipt and odometer photos to /api/documents/upload (if present)."

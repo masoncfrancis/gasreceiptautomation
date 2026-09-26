@@ -4,7 +4,7 @@ services:
     image: gasreceipt:latest
     ports:
       - "8003:8003"
-    env_file: .env
+    env_file: .env.production
     depends_on:
       - lubelogger
     healthcheck:
