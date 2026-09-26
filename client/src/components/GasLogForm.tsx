@@ -326,7 +326,6 @@ function GasLogForm() {
           throw new Error("Could not extract receipt data");
         const preview = await previewResponse.json();
         const extracted = preview.receiptData;
-        const extractedMissingFields: string[] = extracted.missingFields ?? [];
         setReviewData({
           totalCost: extracted.totalCost ?? "",
           gallonsPurchased: extracted.gallonsPurchased ?? "",
@@ -335,10 +334,7 @@ function GasLogForm() {
           storeAddress: extracted.storeAddress ?? "",
           odometerReading: extracted.odometerReading ?? "",
         });
-        setMissingFields(extractedMissingFields);
-        setActiveReviewField(
-          (extractedMissingFields[0] as keyof ReviewData | undefined) ?? null,
-        );
+        setMissingFields(extracted.missingFields ?? []);
         return;
       }
 
@@ -516,11 +512,24 @@ function GasLogForm() {
                   <span>{label}</span>
                   <button
                     type="button"
-                    aria-label={`Fix ${label.toLowerCase()}`}
+                    aria-label={`Edit ${label.toLowerCase()}`}
                     onClick={() => setActiveReviewField(field)}
-                    className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-gray-600"
+                    className="rounded-md p-1 text-gray-500 hover:bg-gray-200 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-blue-300"
                   >
-                    Fix
+                    <svg
+                      aria-hidden="true"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15.232 5.232l3.536 3.536M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z"
+                      />
+                    </svg>
                   </button>
                 </div>
                 <input
