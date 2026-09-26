@@ -3,7 +3,7 @@
   <br>
 </h1>
 
-<h4 align="center">A tool to automate the process of entering gas receipts into <a href="https://lubelogger.com/" target="_blank">LubeLogger</a>.</h4>
+<h4 align="center">A tool to automate entering gas receipts into <a href="https://lubelogger.com/" target="_blank">LubeLogger</a>.</h4>
 
 <p align="center">
   <a href="#features">Features</a> •
@@ -15,96 +15,132 @@
 
 ---
 
-Gas Receipt Automation is a full-stack application designed to streamline the process of logging fuel expenses. Users can submit a photo of their gas receipt and odometer, and the application will automatically extract the relevant information using AI and record it in [LubeLogger](https://lubelogger.com/), a self-hosted service for vehicle maintenance tracking.
+Gas Receipt Automation is a full-stack application for logging fuel expenses. Users upload a gas receipt and provide an odometer reading. An LLM extracts receipt details, the user reviews and corrects those details, and the application submits the confirmed record to [LubeLogger](https://lubelogger.com/).
 
 ## Features
 
-- **Automated Data Extraction**: Uses the OpenAI SDK to parse receipt photos and extract total cost, gallons purchased, date, store, and address.
-- **Flexible Odometer Input**: Supports multiple methods for odometer entry, including manual input, a separate photo of the odometer, or extracting it from the receipt photo itself.
-- **HEIC/HEIF Support**: Automatically handles iOS HEIC/HEIF image formats for receipt and odometer photos.
-- **Vehicle Management**: Fetches and displays a list of vehicles from your LubeLogger instance, allowing you to associate each gas receipt with the correct vehicle.
-- **Secure Authentication**: Integrated with OpenID Connect (OIDC) to ensure that access to the application is secure and user-specific.
-- **Containerized Deployment**: The entire application is containerized using Docker, making setup and deployment straightforward.
+- **Automated data extraction**: Extracts total cost, gallons purchased, date, store, and address from receipt photos using an OpenAI-compatible LLM API.
+- **Receipt review**: Shows extracted values for review and correction before submitting anything to LubeLogger.
+- **Flexible odometer input**: Supports manual entry, a separate odometer photo, or an odometer reading written on the receipt.
+- **HEIC/HEIF support**: Converts iOS receipt and odometer images through `pillow-heif`.
+- **Vehicle management**: Loads vehicles from LubeLogger and hides vehicles marked with the `showInReceiptApp=false` extra field.
+- **OIDC authentication**: Protects the application and API with OpenID Connect bearer-token authentication.
+- **Validation**: Validates required fields and confirmed numeric/date values before uploading files or creating a LubeLogger record.
+- **Containerized deployment**: Builds the React client and FastAPI server into one Docker image and runs it with Docker Compose.
 
 ## Tech Stack
 
-| Component      | Technology                                                                                                                                                                                                                                                        |
-| :------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend**   | [Vite](https://vite.dev/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [oidc-client-ts](https://github.com/authts/oidc-client-ts), [nginx](https://nginx.org/)                          |
-| **Backend**    | [FastAPI](https://fastapi.tiangolo.com/), [Python](https://www.python.org/), [uv](https://docs.astral.sh/uv/), [OpenAI SDK](https://pypi.org/project/openai/) (LLM-agnostic), [PyJWT](https://pyjwt.readthedocs.io/) (OIDC), [Pillow](https://python-pillow.org/) |
-| **Deployment** | [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/)                                                                                                                                                                             |
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** | [Vite](https://vite.dev/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [react-oidc-context](https://github.com/authts/react-oidc-context), [Sentry](https://sentry.io/) |
+| **Backend** | [FastAPI](https://fastapi.tiangolo.com/), [Python](https://www.python.org/) 3.13+, [uv](https://docs.astral.sh/uv/), [OpenAI SDK](https://pypi.org/project/openai/), [Pillow](https://python-pillow.org/), [pillow-heif](https://github.com/bigcatyelps/pillow_heif), [PyJWT](https://pyjwt.readthedocs.io/) |
+| **Deployment** | [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/) |
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- A running instance of [LubeLogger](https://lubelogger.com/)
-- An OIDC identity provider (e.g. Auth0) for authentication
-- An LLM API key (e.g. Google Gemini, OpenAI, etc.)
+- [Docker](https://www.docker.com/get-started) with Docker Compose
+- A running [LubeLogger](https://lubelogger.com/) instance, or use the bundled Compose service
+- An OIDC identity provider
+- An LLM API key for an OpenAI-compatible provider, such as Google Gemini or OpenAI
 
-### Installation
+### Production-style Docker setup
 
-1.  **Clone the repository:**
+1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/FrancisLaboratories/gasreceiptautomation.git
-    cd gasreceiptautomation
-    ```
+   ```bash
+   git clone https://github.com/masoncfrancis/gasreceiptautomation.git
+   cd gasreceiptautomation
+   ```
 
-2.  **Configure the environment:**
-    Create a `.env` file in the `server` directory and add the following environment variables:
+2. Copy the root environment template and fill in its values:
 
-    ```env
-    LUBELOGGER_URL=<your-lubelogger-url>
-    LLM_API_KEY=<your-llm-api-key>
-    LLM_BASE_URL=<your-llm-base-url>  # optional, defaults to Google Gemini OpenAI-compat endpoint
-    LLM_MODEL=<model-name>            # optional, defaults to gemini-2.5-flash-lite
-    OIDC_ISSUER=<your-oidc-issuer>
-    OIDC_AUDIENCE=<your-oidc-api-audience>
-    ```
+   ```bash
+   cp .env.example .env.production
+   ```
 
-    Create a `.env` file in the `client` directory and add the following environment variables:
+   Configure these groups in `.env.production`:
 
-    ```env
-    VITE_OIDC_ISSUER=<your-oidc-issuer>
-    VITE_OIDC_CLIENT_ID=<your-oidc-client-id>
-    VITE_OIDC_REDIRECT_URI=<your-oidc-redirect-uri>
-    VITE_OIDC_AUDIENCE=<your-oidc-api-audience>
-    ```
+   - **Server**: `PORT`, `LUBELOGGER_URL`, `LLM_API_KEY`, optional `LLM_BASE_URL`, `LLM_MODEL`, and optional `SENTRY_DSN`
+   - **OIDC validation**: `OIDC_ISSUER`, `OIDC_AUDIENCE`, and optional `OIDC_ALGORITHMS`
+   - **Browser runtime configuration**: `PUBLIC_OIDC_ISSUER`, `PUBLIC_OIDC_CLIENT_ID`, `PUBLIC_OIDC_AUDIENCE`, and `PUBLIC_OIDC_REDIRECT_URI`
+   - **Browser monitoring**: optional `PUBLIC_SENTRY_DSN`
 
-3.  **Build and run the application:**
+   `PUBLIC_*` values are served to the browser through `/config.js`. They are not secrets. Keep LLM keys and other private values out of source control.
 
-    ```bash
-    docker compose up --build
-    ```
+3. Build and start the application and bundled LubeLogger instance:
 
-    To also spin up a bundled LubeLogger instance:
+   ```bash
+   docker compose up --build
+   ```
 
-    ```bash
-    docker compose -f docker-compose.yaml -f docker-compose.lubelogger.yml up --build
-    ```
+   The application is available at `http://localhost:8003`. The bundled LubeLogger instance is available at `http://localhost:8080`.
 
-    The application will be available at `http://localhost:8003`.
+### Local development
+
+For the split client/server Docker setup, create environment files from the checked-in examples:
+
+```bash
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+```
+
+Start the application without bundled LubeLogger:
+
+```bash
+docker compose -f docker/dev.docker-compose.yaml up --build
+```
+
+Start it with bundled LubeLogger:
+
+```bash
+docker compose -f docker/dev.lubelogger.docker-compose.yml up --build
+```
+
+For frontend-only development, install dependencies in `client` and run Vite:
+
+```bash
+cd client
+npm ci
+npm run dev
+```
+
+The Vite proxy targets `http://localhost:8002` during local development.
 
 ## Usage
 
-1.  **Log in**: Access the application and log in using your OIDC provider (e.g. Auth0) credentials.
-2.  **Select a vehicle**: Choose the vehicle you are logging a gas receipt for from the dropdown menu.
-3.  **Upload receipt**: Upload a clear photo of your gas receipt.
-4.  **Provide odometer reading**: Enter the odometer reading manually or upload a photo of the odometer.
-5.  **Review**: Click "Review Receipt". The application extracts receipt and odometer details without contacting LubeLogger.
-6.  **Confirm and submit**: Correct any extracted values, then click "Submit Receipt" to create the gas record.
+1. **Log in** through the configured OIDC provider.
+2. **Select a vehicle** loaded from LubeLogger.
+3. **Upload a receipt photo**.
+4. **Choose an odometer method**:
+   - Take or upload a separate odometer photo.
+   - Use an odometer reading written on the receipt.
+   - Enter the reading manually.
+5. **Answer fuel-history questions** about whether the tank was filled fully and whether the form was completed during the previous fill-up.
+6. **Review the receipt**. The application sends images to the configured LLM and displays extracted values. This preview does not submit a record to LubeLogger.
+7. **Correct missing or incorrect values**, then select **Submit Receipt**.
+8. The server uploads receipt images to LubeLogger and creates the gas record using the confirmed values.
+
+## API
+
+The authenticated API is served under `/api`:
+
+- `GET /api/vehicles`: Return vehicles available for receipt logging.
+- `POST /api/previewGas`: Extract receipt and odometer values for review.
+- `POST /api/submitGas`: Submit confirmed values and attachments to LubeLogger.
+- `GET /api/health`: Check whether the server can reach LubeLogger.
+
+FastAPI also exposes its generated documentation at `/docs` when the application is running.
 
 ## Architecture
 
-The application is composed of two main services:
+The production deployment contains two services:
 
-- **Client**: A [Vite](https://vite.dev/)-built React single-page application served by [nginx](https://nginx.org/). It provides the user interface for submitting gas receipts and communicates with the backend API.
-- **Server**: A FastAPI backend that extracts receipt and odometer data, returns it for user confirmation, then creates a gas record in LubeLogger from confirmed values.
+- **App**: A multi-stage Docker image builds the Vite React client, serves its static files from FastAPI, and exposes the authenticated `/api` endpoints on port `8003`.
+- **LubeLogger**: The official LubeLogger image stores vehicle and gas records, plus uploaded documents, in Docker volumes and exposes port `8080`.
 
-Both services are containerized with Docker and orchestrated using Docker Compose.
+The server uses the configured LLM provider to extract data from images. It returns extracted data to the client for confirmation, then sends only confirmed values to LubeLogger. Docker Compose provides service networking and the application health check at `/api/health`.
 
 > [!NOTE]
-> This project is designed to be used with a self-hosted LubeLogger instance. For more information on setting up LubeLogger, please refer to the [official documentation](https://docs.lubelogger.com/).
+> This project is designed to work with a self-hosted LubeLogger instance. See the [LubeLogger documentation](https://docs.lubelogger.com/) for setup and configuration details.
